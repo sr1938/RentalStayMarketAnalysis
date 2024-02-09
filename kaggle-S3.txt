@@ -1,0 +1,21 @@
+######################
+Kaggle -> S3
+######################
+
+sudo yum install python3
+
+sudo yum install python3-pip
+
+pip install kaggle
+
+mkdir ~/.kaggle
+
+mv kaggle.json ~/.kaggle/
+
+export PATH=$PATH:~/.local/bin
+
+source ~/.bashrc
+
+kaggle datasets download -d allanbruno/airbnb-rio-de-janeiro
+
+aws s3 cp total_data.csv s3://shubh-datalak-raw/
