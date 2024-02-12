@@ -1,0 +1,57 @@
+
+export mysql_connector_path=/home/hadoop/mysql-connector-java-8.0.23.jar
+
+export spark_classpath=$spark_classpath:$mysql_connector_path
+
+pyspark --jars $mysql_connector_path
+
+
+from pyspark.sql import SparkSession
+
+jdbc_url = "jdbc:mysql://database-1.cnp0t9ojtoc4.us-east-1.rds.amazonaws.com:3306/bigpro"
+
+jdbc_pro = {"user":"admin","password":"12345678","driver":"com.mysql.jdbc.Driver"}
+
+
+#to read data from rds 
+
+df2 = spark.read.jdbc(url=jdbc_url,table="latestdata",properties=jdbc_pro)
+
+
+# to write data into s3 bucket from emr pyspark :-
+
+
+ df2.write.csv.option("header", "true").save("s3://desti01bucket/latest/")
+
+df2.select("host_verifications").show()
+
+# to Merged dataset:-
+
+df4 = spark.read.format('csv').options(sep=",", escape='"', mode="PERMISSIVE", header=True, multiLine=True).load('s3://source01bucket/project/total_data.csv')
+
+
+
+column_names = [
+    "id", "name", "description", "host_name", "host_response_time", "host_is_superhost",
+    "host_listings_count", "host_verifications", "host_identity_verified", "neighbourhood",
+    "latitude", "longitude", "property_type", "room_type", "accommodates", "bathrooms",
+    "bedrooms", "beds", "amenities", "price", "minimum_minimum_nights", "maximum_minimum_nights",
+    "minimum_maximum_nights", "maximum_maximum_nights", "minimum_nights_avg_ntm",
+    "maximum_nights_avg_ntm", "has_availability", "availability_30", "availability_60",
+    "availability_90", "availability_365", "review_scores_rating", "review_scores_accuracy",
+    "review_scores_cleanliness", "review_scores_checkin", "review_scores_communication",
+    "review_scores_location", "review_scores_value", "instant_bookable", "number_of_reviews_ltm",
+    "calculated_host_listings_count_entire_homes", "calculated_host_listings_count_private_rooms",
+    "calculated_host_listings_count_shared_rooms"
+]
+
+
+
+>>> rdstdata=df2.select(column_names)old
+>>> s3data=df4.select(column_names)
+>>> merged_df = rdsdata.union(s3data)
+>>> merged_df.count()
+913973
+
+
+
