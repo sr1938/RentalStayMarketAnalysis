@@ -216,6 +216,7 @@ i.e.only
 3)extra_people
 4)cancellation_policy
 5)month
+6)city
 
 ------------------------------------------------------
 1)security_deposite:
@@ -278,7 +279,7 @@ rds_df.select("city").show()
 
 
  ------------------------------------------------------
-# columns for latestdata
+# columns for latestdata-35
 
 selected_columns = [
     "id", "name", "description", 
