@@ -1,0 +1,190 @@
+#to read file in spark:
+df = spark.read.format('csv').options(sep=",", escape='"', mode="PERMISSIVE", header=True, multiLine=True).load('s3://final-044/zip/total_data.csv')
+
+
+#to read 'property_type' column:
+>>> df.select("property_type").show()
+
+
+#print schema with datatypes:
+>>> df.printSchema()
+
+
+#show all column names:
+column_names = df.columns
+print(column_names)
+
+#select columns that needed:
+
+selected_columns = [
+    "id", "name", "description", 
+    "host_name", "host_response_time","host_listings_count", "host_verifications", 
+    "host_identity_verified", "neighbourhood","city","latitude", "longitude", 
+    "property_type", "room_type", "accommodates", "bathrooms", "bedrooms", "beds", "amenities", 
+    "price", "security_deposit", "guests_included", "extra_people", 
+    "availability_30", "availability_60", "availability_90", "availability_365","number_of_reviews", 
+    "review_scores_rating", "review_scores_accuracy", "review_scores_cleanliness", 
+    "review_scores_checkin", "review_scores_communication", "review_scores_location", 
+    "review_scores_value", "instant_bookable", "cancellation_policy", "month", 
+    "minimum_minimum_nights","maximum_maximum_nights","calculated_host_listings_count"
+]
+new_df = df.select(selected_columns)
+new_df.printSchema()
+ 
+
+ 
+from pyspark.sql.functions import col
+
+# Convert column data types
+new_df = new_df.withColumn("id", col("id").cast("long")) \
+.withColumn("host_listings_count", col("host_listings_count").cast("float")) \
+.withColumn("latitude", col("latitude").cast("double")) \
+.withColumn("longitude", col("longitude").cast("double")) \
+.withColumn("accommodates", col("accommodates").cast("integer")) \
+.withColumn("bathrooms", col("bathrooms").cast("float")) \
+.withColumn("bedrooms", col("bedrooms").cast("float")) \
+.withColumn("beds", col("beds").cast("float")) \
+.withColumn("security_deposit", col("security_deposit").cast("float")) \
+.withColumn("guests_included", col("guests_included").cast("integer")) \
+.withColumn("extra_people", col("extra_people").cast("float")) \
+.withColumn("availability_30", col("availability_30").cast("integer")) \
+.withColumn("availability_60", col("availability_60").cast("integer")) \
+.withColumn("availability_90", col("availability_90").cast("integer")) \
+.withColumn("availability_365", col("availability_365").cast("integer")) \
+.withColumn("number_of_reviews", col("number_of_reviews").cast("integer")) \
+.withColumn("review_scores_rating", col("review_scores_rating").cast("float")) \
+.withColumn("review_scores_accuracy", col("review_scores_accuracy").cast("float")) \
+.withColumn("review_scores_cleanliness", col("review_scores_cleanliness").cast("float")) \
+.withColumn("review_scores_checkin", col("review_scores_checkin").cast("float")) \
+.withColumn("review_scores_communication", col("review_scores_communication").cast("float")) \
+.withColumn("review_scores_location", col("review_scores_location").cast("float")) \
+.withColumn("review_scores_value", col("review_scores_value").cast("float")) \
+.withColumn("month", col("month").cast("integer")) \
+.withColumn("minimum_minimum_nights", col("minimum_minimum_nights").cast("float")) \
+.withColumn("maximum_maximum_nights", col("maximum_maximum_nights").cast("float")) \
+.withColumn("calculated_host_listings_count", col("calculated_host_listings_count").cast("integer"))
+
+# Print the schema after data type conversion
+new_df.printSchema()
+
+# Get the count of columns
+column_count = len(new_df.columns)
+print(column_count)
+
+#To remove the dollar sign from the columns containing $:
+
+from pyspark.sql.functions import col, regexp_replace
+
+new_df = new_df.withColumn("price", regexp_replace(col("price"), "\\$", ""))
+new_df = new_df.withColumn("security_deposit", regexp_replace(col("security_deposit"), "\\$", ""))
+new_df = new_df.withColumn("extra_people", regexp_replace(col("extra_people"), "\\$", ""))
+
+
+new_df = new_df.withColumn("price", col("price").cast("float"))
+new_df = new_df.withColumn("security_deposit", col("security_deposit").cast("float"))
+new_df = new_df.withColumn("extra_people", col("extra_people").cast("float"))
+
+
+# Show the first 5 entries of the DataFrame
+new_df.select("price", "security_deposit", "extra_people").show(5)
+
+
+
+#replacing null values with 0:
+from pyspark.sql.functions import col
+new_df = new_df.fillna({"security_deposit": 0})
+
+ null_count = new_df.filter(col("security_deposit").isNull()).count()
+ print("Number of null values in security_deposit column:", null_count)
+
+
+----Dealing with "host_response_time" column:
+# Replacing empty strings and null values with 'within a       few hours'
+
+from pyspark.sql.functions import col, when
+
+new_df = new_df.withColumn('host_response_time', when((col('host_response_time') == '') | (col('host_response_time').isNull()), 'within a few hours').otherwise(col('host_response_time')))
+
+
+null_count = new_df.filter(col("security_deposit").isNull()).count()
+print("Number of null values in security_deposit column:", null_count)
+
+
+
+----Dealing with instant_bookable column:
+
+from pyspark.sql.functions import col, when
+
+
+new_df = new_df.withColumn('instant_bookable', when(col('instant_bookable') == 't', 'yes')
+                           .when(col('instant_bookable') == 'f', 'no')
+                           .when(col('instant_bookable').isNull() | (col('instant_bookable') == ''), 'yes')
+                           .otherwise(col('instant_bookable')))
+
+
+
+# Transforming “cancellation_policy ” column :
+
+from pyspark.sql.functions import when
+
+# Define the transformation rules
+transformation_rules = {
+    "strict_14_with_grace_period": "within_15_days",
+    "flexible": "flexible",
+    # For remaining inputs, change to "10%_of_cancellation_charges"
+}
+
+# Apply the transformation using when and otherwise
+new_df = new_df.withColumn(
+    "cancellation_policy",
+    when(
+        new_df["cancellation_policy"] == "strict_14_with_grace_period", "within_15_days"
+    ).when(
+        new_df["cancellation_policy"] == "flexible", "flexible"
+    ).otherwise(
+        "10%_of_cancellation_charges"
+    )
+)
+
+# See this distinct output 
+distinct_cancellation_policy = new_df.select("cancellation_policy").distinct()
+distinct_cancellation_policy.show()
+
+
+
+# Transformation in the column “month”
+from pyspark.sql.functions import month, to_date, date_format
+
+# Define a mapping from month number to month name
+month_names = {
+    1: "January",
+    2: "February",
+    3: "March",
+    4: "April",
+    5: "May",
+    6: "June",
+    7: "July",
+    8: "August",
+    9: "September",
+    10: "October",
+    11: "November",
+    12: "December"
+}
+
+# Map month number to month name
+new_df = new_df.withColumn("month", date_format(to_date(new_df["month"].cast("string"), "M"), "MMMM"))
+
+# Alternatively, you can use the map function
+# new_df = new_df.withColumn("month", new_df["month"].cast("int")).replace(month_names, subset=['month'])
+
+# Change the data type of the month column to string
+new_df = new_df.withColumn("month", new_df["month"].cast("string"))
+
+distinct_month = new_df.select("month").distinct()
+distinct_month.show()
+
+
+
+
+
+
