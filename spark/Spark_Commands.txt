@@ -152,11 +152,8 @@ new_df = new_df.withColumn("extra_people", col("extra_people").cast("float"))
 
 new_df.printSchema()
 
---------------------------------------------------------------------------------
-
----- Dealing with "security_deposite" column
+------------------------------------------------------------------------------------ Dealing with "security_deposite" column
 #replacing null values with 0:
-
 
 from pyspark.sql.functions import col
 >>new_df = new_df.fillna({"security_deposit": 0})
