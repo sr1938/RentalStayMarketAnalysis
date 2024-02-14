@@ -9,3 +9,45 @@ provider "aws" {
 #     ami = "ami-0e731c8a588258d0d"
 #     instance_type = "t2.micro"
 # }
+
+
+resource "aws_instance" "clouddata" {
+  ami           = "ami-0cf10cdf9fcd62d37" 
+  instance_type = "t2.micro"
+  key_name      = "Mayur_Bonde"
+  vpc_security_group_ids = [aws_security_group.main.id]
+  # user_data = file("userdata.sh")
+}
+
+resource "aws_ebs_volume" "ebsvolume" {
+  availability_zone = "us-east-1a"
+  size              = 30
+}
+
+
+resource "aws_security_group" "main" {
+  name         = "EC2-kaggle"
+  
+  ingress {
+    from_port   = 80
+    protocol    = "TCP"
+    to_port     = 80
+    cidr_blocks = ["0.0.0.0/0"]
+
+  }
+
+  ingress {
+    from_port   = 22
+    protocol    = "TCP"
+    to_port     = 22
+    cidr_blocks = ["0.0.0.0/0"]
+
+  }
+
+  egress {
+    from_port  = 0
+    protocol   = "-1"
+    to_port    = 0
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
