@@ -128,3 +128,58 @@ terraform init -- to connect your Local windows machine with your AWS account(Pr
 terraform plan -- It shows the details of the resource creation step by step.
 terraform apply -- to execute the applied plan.
 terraform destroy -- It destroy's the resources which have been created by terraform apply command.
+
+
+
+## to create the resource of the EMR cluster
+
+resource "aws_emr_cluster" "cluster" {
+  name          = "emr-test-arn"
+  release_label = "emr-6.15.0"
+  applications  = ["Spark"]
+
+  termination_protection            = false
+  keep_job_flow_alive_when_no_steps = true
+
+  ec2_attributes {
+    emr_managed_master_security_group = aws_security_group.main.id
+    emr_managed_slave_security_group  = aws_security_group.main.id
+    instance_profile                  = aws_iam_instance_profile.mayur_instance.role
+  }
+
+  master_instance_group {
+    instance_type = "m5.xlarge"
+  }
+
+  ebs_root_volume_size = 15
+
+  tags = {
+    role = "rolename"
+    env  = "env"
+  }
+
+  service_role = "arn:aws:iam::126751535369:role/EMR_DefaultRole"
+}
+
+
+resource "aws_iam_instance_profile" "mayur_instance" {
+  name = "Second_EMR"
+  role = "EMR_EC2_DefaultRole"
+}
+
+
+## here i have created only primary node and ec2 instance
+
+
+## if you unintentionally lost any resources from your terraform file or some changes happen in your existing file it can be recovered with following command :- "terraform import"
+
+
+e.g.:
+terraform import aws_iam_instance_profile.mayur_instance <instance_profile_arn>
+
+
+if you would like to remove it from your file use below command:-
+
+e.g.:
+terraform state rm aws_iam_instance_profile.mayur_instance
+
