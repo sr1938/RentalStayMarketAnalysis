@@ -36,7 +36,7 @@ rds_df = spark.read.jdbc(url=jdbc_url,table=table_name,properties=jdbc_pro)
 
 # To write data to s3 Datalake 
 
-output_path = "s3://group4-raw-data-zone/job1/rdsdata.parquet" 
+output_path = "s3://final-029/rdsdata/rdsdata.parquet" 
 rds_df.coalesce(1).write \
     .option("header", "True") \
     .option("multiline", True) \
