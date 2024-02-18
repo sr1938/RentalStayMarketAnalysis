@@ -3,46 +3,46 @@ provider "aws" {
     region = "us-east-1"
   }
 
-# generate randomised names
-resource "random_id" "random_id_generator" {
-    byte_length = 8
-}
+# # generate randomised names
+# resource "random_id" "random_id_generator" {
+#     byte_length = 8
+# }
 
 
 
-####--------------------------------------- S3 bucket --------------------------------------------####
-resource "aws_s3_bucket" "raw_data_zone" {
-    bucket = "rawdata-${random_id.random_id_generator.hex}"
+# ####--------------------------------------- S3 bucket --------------------------------------------####
+# resource "aws_s3_bucket" "raw_data_zone" {
+#     bucket = "rawdata-${random_id.random_id_generator.hex}"
     
-    tags = {
-        project_type = "demo"
-    } 
-}
-resource "aws_s3_bucket_ownership_controls" "raw_data_zone" {
-  bucket = aws_s3_bucket.raw_data_zone.id
-  rule {
-    object_ownership = "BucketOwnerPreferred"
-  }
-}
-resource "aws_s3_bucket_public_access_block" "raw_data_zone" {
-  bucket = aws_s3_bucket.raw_data_zone.id
+#     tags = {
+#         project_type = "demo"
+#     } 
+# }
+# resource "aws_s3_bucket_ownership_controls" "raw_data_zone" {
+#   bucket = aws_s3_bucket.raw_data_zone.id
+#   rule {
+#     object_ownership = "BucketOwnerPreferred"
+#   }
+# }
+# resource "aws_s3_bucket_public_access_block" "raw_data_zone" {
+#   bucket = aws_s3_bucket.raw_data_zone.id
 
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
-}
+#   block_public_acls       = false
+#   block_public_policy     = false
+#   ignore_public_acls      = false
+#   restrict_public_buckets = false
+# }
 
 
-resource "aws_s3_bucket_acl" "raw_data_zone" {
-  depends_on = [
-    aws_s3_bucket_ownership_controls.raw_data_zone,
-    aws_s3_bucket_public_access_block.raw_data_zone,
-  ]
+# resource "aws_s3_bucket_acl" "raw_data_zone" {
+#   depends_on = [
+#     aws_s3_bucket_ownership_controls.raw_data_zone,
+#     aws_s3_bucket_public_access_block.raw_data_zone,
+#   ]
 
-  bucket = aws_s3_bucket.raw_data_zone.id
-  acl    = "public-read"
-}
+#   bucket = aws_s3_bucket.raw_data_zone.id
+#   acl    = "public-read"
+# }
 
 ####--------------------------------------- EC2 Instance --------------------------------------------####
 
@@ -122,4 +122,6 @@ resource "aws_db_instance" "rds_ingest_instance" {
   publicly_accessible      = var.public_access
   instance_class           = var.instance_class
   allocated_storage        = 20
+  availability_zone        = var.availability_zone
+  
 }

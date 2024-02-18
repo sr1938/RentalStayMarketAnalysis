@@ -1,6 +1,6 @@
 # s3 object to upload the file
-resource "aws_s3_object" "test_glue_script" {
-    bucket = aws_s3_bucket.raw_data_zone.id
+resource "aws_s3_object" "data_cleaning_glue_script" {
+    bucket = "group4-raw-data-zone"
     
     key = "/TestDeploy.py"
     source = "./TestDeploy.py"
@@ -27,10 +27,10 @@ resource "aws_glue_job" "glue_deploy" {
   }
   command {
     name="gluel" 
-    script_location = "s3://${aws_s3_bucket.raw_data_zone.id}/TestDeploy.py" 
+    script_location = "s3://group4-raw-data-zone/TestDeploy.py" 
   }
   default_arguments = {
-    "--output-dir"              = "s3://shubh-datalak-enrich/final-enriched-project-data/"
+    "--output-dir"              = "s3://group4-enrich-data-zone/"
     "--class"                   = "GlueApp"
     "--enable-job-insights"     = "true"
     "--enable-auto-scaling"     = "false"

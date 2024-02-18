@@ -25,7 +25,7 @@ resource "aws_glue_crawler" "rental_market_analysis" {
     database_name = aws_glue_catalog_database.RentalMarket.name
 
     s3_target {
-      path = "s3://shubh-datalak-enrich/final_enriched_data.csv"
+      path = "s3://group4-enrich-data-zone/final_enriched_data.csv"
     }
     tags = {
         product_type = "rental_market_analysis"
@@ -46,7 +46,7 @@ resource "aws_athena_workgroup" "rental_market_analysis_workgroup" {
 
 configuration {
     result_configuration {
-        output_location = "s3://shubh-datalak-enrich/queryresults"
+        output_location = "s3://group4-enrich-data-zone/queryresults"
     }
 
   }

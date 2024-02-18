@@ -12,7 +12,7 @@ variable "db_name" {
 variable "user_name" {
   description = "username for db instance"
   type        = string
-  default     = "group4_dbda"
+  default     = "admin"
 }
 variable "pass" {
   description = "password for db instance"
@@ -39,5 +39,9 @@ variable "delete_automated_backup" {
 }
 variable "instance_class" {
   type    = string
-  default = "db.t2.micro"
+  default = "db.t3.micro"
+}
+variable "availability_zone" {
+  type = string
+  default = "us-east-1c"
 }
