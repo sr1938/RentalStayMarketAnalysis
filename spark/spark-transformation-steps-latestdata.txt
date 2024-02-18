@@ -1,0 +1,136 @@
+pyspark
+
+### working on latest data ###
+
+raw_bucketpath = 's3://shubh-datalak-raw/latestdata/converted_latestdata.csv'
+
+df = spark.read.format('csv').options(delimiter=",", escape='"', mode="PERMISSIVE", header=True, multiLine=True).load(raw_bucketpath)
+-------------------------------------------------------------------------------------------
+# EDA
+
+#Count of columns
+num_columns = len(ld.columns)
+print(num_columns)
+
+75
+
+#show all column names:
+column_names = ld.columns
+for i in column_names:
+	print(i,end="\n")
+-------------------------------------------------------------------------------------------
+#select only necessary columns:34
+
+selected_columns = [
+	"id", "name","host_name", "host_response_time","host_listings_count", 	"host_verifications", "host_identity_verified", "neighbourhood", "latitude", 	"longitude", "property_type", "room_type", "accommodates", "bathrooms", "bedrooms", 	"beds", "amenities", "price", "availability_30", "availability_60", 
+	"availability_90", "availability_365","number_of_reviews", 
+    "review_scores_rating", "review_scores_accuracy", "review_scores_cleanliness", 
+    "review_scores_checkin", "review_scores_communication", "review_scores_location", 
+    "review_scores_value", "instant_bookable", "minimum_minimum_nights","maximum_maximum_nights","calculated_host_listings_count"
+]
+
+
+new_df = ld.select(selected_columns)
+new_df.printSchema()
+-------------------------------------------------------------------------------------------
+#EDA
+
+#Count of columns
+num_columns = len(new_df.columns)
+print(num_columns)
+
+34
+
+#show all column names:
+column_names = new_df.columns
+for i in column_names:
+	print(i,end="\n")
+
+#count distinct rows
+new_df.distinct().count()
+
+129767
+
+#count rows
+new_df.count()
+
+129849
+
+#data type of each
+new_df.dtypes
+
+String
+
+-------------------------------------------------------------------------------------------
+
+# add 5 columns
+
+from pyspark.sql.functions import rand, lit
+
+
+values_set = [0,900,333,100,161,200,678,567,500,200,108,372,417,1000,800,713]
+
+rds_df = new_df.withColumn("security_deposit", lit(values_set).getItem((rand()*len(values_set)).cast("int")))
+
+rds_df.select("security_deposit").show(20)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+values_set = [1,2,3]
+
+rds_df = rds_df.withColumn("guests_included", lit(values_set).getItem((rand()*len(values_set)).cast("int")))
+
+rds_df.select("guests_included").show()
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+values_set = [1,2,3]
+
+rds_df = rds_df.withColumn("extra_people", lit(values_set).getItem((rand()*len(values_set)).cast("int")))
+
+rds_df.select("extra_people").show()
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+values_set = ["flexible" ,"within_15_days","10%_of_cancellation_charges"]
+
+rds_df = rds_df.withColumn("cancellation_policy", lit(values_set).getItem((rand()*len(values_set)).cast("int")).cast("string"))
+
+rds_df.select("cancellation_policy").show()
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+values_set = ["jan","feb","mar","apr","may","june","july","aug","sep","oct","nov","dec"]
+
+rds_df = rds_df.withColumn("month", lit(values_set).getItem((rand()*len(values_set)).cast("int")).cast("string"))
+
+rds_df.select("month").show()
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+values_set = ["Rio de Janeiro", "Rio de Janeiro"]
+
+rds_df = rds_df.withColumn("city", lit(values_set).getItem((rand() * len(values_set)).cast("int")).cast("string"))
+
+rds_df.select("city").show()
+-------------------------------------------------------------------------------------------
+
+#EDA
+
+#Count of columns
+num_columns = len(rds_df.columns)
+print(num_columns)
+
+40
+
+#columns added
+# security_deposit
+# guests_included
+# extra_people
+# cancellation_policy
+# month
+# city
+
+
+
+replace null values of bathroom according to accomodates
+

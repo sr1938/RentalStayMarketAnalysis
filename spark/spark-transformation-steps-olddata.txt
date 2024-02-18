@@ -1,0 +1,106 @@
+spark transformation steps old data
+
+### working on old data ###
+
+raw_oldbucketpath = 's3://shubh-datalak-raw/total_data.csv'
+
+df = spark.read.format('csv').options(delimiter=",", escape='"', mode="PERMISSIVE", header=True, multiLine=True).load(raw_oldbucketpath)
+-------------------------------------------------------------------------------------------
+# EDA
+
+#Count of columns
+num_columns = len(df.columns)
+print(num_columns)
+
+108
+
+#show all column names:
+column_names = df.columns
+for i in column_names:
+	print(i,end="\n")
+-------------------------------------------------------------------------------------------
+
+
+selected_column = ["id","name","host_name","host_response_time","host_listings_count",
+    		   "host_verifications","host_identity_verified","neighbourhood",
+    		   "latitude","longitude","property_type","room_type","accommodates",
+                   "bathrooms","bedrooms","beds","amenities","price","availability_30",
+                   "availability_60","availability_90","availability_365",
+    		   "number_of_reviews","review_scores_rating","review_scores_accuracy",
+                   "review_scores_cleanliness","review_scores_checkin",
+    		   "review_scores_communication","review_scores_location",
+    		   "review_scores_value","instant_bookable",
+    		   "minimum_minimum_nights","maximum_maximum_nights",
+                   "calculated_host_listings_count",
+    		   "security_deposit","guests_included","extra_people",
+    		   "cancellation_policy","month","city"
+]
+
+new_df = df.select(selected_column)
+new_df.printSchema()
+
+-------------------------------------------------------------------------------------------
+#EDA
+
+#Count of columns
+num_columns = len(new_df.columns)
+print(num_columns)
+
+40
+
+#show all column names:
+column_names = new_df.columns
+for i in column_names:
+	print(i,end="\n")
+
+#count distinct rows
+new_df.distinct().count()
+
+778816
+
+#count rows
+new_df.count()
+
+784121
+
+#data type of each
+new_df.dtypes
+
+String
+
+-------------------------------------------------------------------------------------------
+
+from pyspark.sql.functions import col
+
+# Define the columns you want to cast from int to string
+columns_to_cast = ["security_deposit","guests_included","extra_people"]
+
+# Cast the specified columns from int to string
+for column in columns_to_cast:
+    rds_df = rds_df.withColumn(column, col(column).cast("string"))
+
+
+#union of two dfs
+
+merged_df = rds_df.union(new_df)
+
+merged_df.distinct().count()
+
+908665
+
+merged_df.count()
+
+913970
+
+
+
+
+
+
+
+
+
+
+
+
+

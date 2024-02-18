@@ -1,0 +1,298 @@
+#to read file in spark:
+df = spark.read.format('csv').options(sep=",", escape='"', mode="PERMISSIVE", header=True, multiLine=True).load('s3://final-044/zip/total_data.csv')
+
+
+#to read 'property_type' column:
+>>> df.select("property_type").show()
+
+
+#print schema with datatypes:
+>>> df.printSchema()
+
+
+#show all column names:
+column_names = df.columns
+>>> print(column_names)
+
+
+
+
+#select only necessary columns:41
+
+selected_columns = [
+    "id", "name", "description", 
+    "host_name", "host_response_time","host_listings_count", "host_verifications", 
+    "host_identity_verified", "neighbourhood","city","latitude", "longitude", 
+    "property_type", "room_type", "accommodates", "bathrooms", "bedrooms", "beds", "amenities", 
+    "price", "security_deposit", "guests_included", "extra_people", 
+    "availability_30", "availability_60", "availability_90", "availability_365","number_of_reviews", 
+    "review_scores_rating", "review_scores_accuracy", "review_scores_cleanliness", 
+    "review_scores_checkin", "review_scores_communication", "review_scores_location", 
+    "review_scores_value", "instant_bookable", "cancellation_policy", "month", 
+    "minimum_minimum_nights","maximum_maximum_nights","calculated_host_listings_count"
+]
+
+
+
+new_df = df.select(selected_columns)
+new_df.printSchema()
+
+
+num_columns = len(selected_columns)
+print("Number of columns in the new DataFrame:", num_columns)
+
+
+
+-------------------------------------------------------------------------------------------
+
+##Write back the DataFrame to AWS S3 as CSV:
+s3_bucket_path = "s3://your-bucket-name/path/to/save/new_dataframe/"
+new_df.write.csv(s3_bucket_path, header=True, mode="overwrite")
+
+
+------------------------------------------------------------------------------------------
+>>> new_df.printSchema()
+root
+ |-- id: string (nullable = true) change data type to long 
+ |-- name: string (nullable = true) 
+ |-- description: string (nullable = true) 
+ |-- transit: string (nullable = true)    
+ |-- host_name: string (nullable = true)  
+ |-- host_response_time: string (nullable = true)
+ |-- host_is_superhost: string (nullable = true)
+ |-- host_listings_count: string (nullable = true) change data type to float
+ |-- host_verifications: string (nullable = true)  
+ |-- host_identity_verified: string (nullable = true) 
+ |-- neighbourhood: string (nullable = true)  
+ |-- city: string (nullable = true)   
+ |-- latitude: string (nullable = true) change data type to double
+ |-- longitude: string (nullable = true)  change data type to double
+ |-- property_type: string (nullable = true)   
+ |-- room_type: string (nullable = true) 
+ |-- accommodates: string (nullable = true)  change data type to integer
+ |-- bathrooms: string (nullable = true)     change data type to float
+ |-- bedrooms: string (nullable = true)     change data type to float
+ |-- beds: string (nullable = true)         change data type to float
+ |-- amenities: string (nullable = true)     
+ |-- price: string (nullable = true)     
+ |-- security_deposit: string (nullable = true) change data type to float
+ |-- guests_included: string (nullable = true)   change data type to integer
+ |-- extra_people: string (nullable = true)       change data type to float   
+ |-- availability_30: string (nullable = true)   change data type to integer
+ |-- availability_60: string (nullable = true)    change data type to integer
+ |-- availability_90: string (nullable = true)    change data type to integer
+ |-- availability_365: string (nullable = true)    change data type to integer
+ |-- review_scores_rating: string (nullable = true)   change data type to float
+ |-- review_scores_accuracy: string (nullable = true)  change data type to float
+ |-- review_scores_cleanliness: string (nullable = true)   change data type to float
+ |-- review_scores_checkin: string (nullable = true)     change data type to float
+ |-- review_scores_communication: string (nullable = true)   change data type to float
+ |-- review_scores_location: string (nullable = true)     change data type to float
+ |-- review_scores_value: string (nullable = true)        change data type to float
+ |-- instant_bookable: string (nullable = true)             
+ |-- cancellation_policy: string (nullable = true)      
+ |-- month: string (nullable = true)                     change data type to integer
+ |-- minimum_minimum_nights: string (nullable = true)   change data type to float
+ |-- maximum_maximum_nights: string (nullable = true)    change data type to float
+############################################################################
+
+from pyspark.sql.functions import col
+
+
+# Cast columns to specified data types
+new_df = new_df.withColumn("id", col("id").cast("long")) \
+               .withColumn("city", col("id").cast("long")) \
+               .withColumn("host_listings_count", col("host_listings_count").cast("float")) \
+               .withColumn("latitude", col("latitude").cast("double")) \
+               .withColumn("longitude", col("longitude").cast("double")) \
+               .withColumn("accommodates", col("accommodates").cast("int")) \
+               .withColumn("bathrooms", col("bathrooms").cast("float")) \
+               .withColumn("bedrooms", col("bedrooms").cast("float")) \
+               .withColumn("beds", col("beds").cast("float")) \
+               .withColumn("price", col("price").cast("float")) \
+               .withColumn("security_deposit", col("security_deposit").cast("float")) \
+               .withColumn("guests_included", col("guests_included").cast("int")) \
+               .withColumn("extra_people", col("extra_people").cast("float")) \
+               .withColumn("availability_30", col("availability_30").cast("int")) \
+               .withColumn("availability_60", col("availability_60").cast("int")) \
+               .withColumn("availability_90", col("availability_90").cast("int")) \
+               .withColumn("availability_365", col("availability_365").cast("int")) \
+	       .withColumn("number_of_reviews", col("number_of_reviews").cast("int")) \
+               .withColumn("review_scores_rating", col("review_scores_rating").cast("float")) \
+               .withColumn("review_scores_accuracy", col("review_scores_accuracy").cast("float")) \
+               .withColumn("review_scores_cleanliness", col("review_scores_cleanliness").cast("float")) \
+               .withColumn("review_scores_checkin", col("review_scores_checkin").cast("float")) \
+               .withColumn("review_scores_communication", col("review_scores_communication").cast("float")) \
+               .withColumn("review_scores_location", col("review_scores_location").cast("float")) \
+               .withColumn("review_scores_value", col("review_scores_value").cast("float")) \
+               .withColumn("month", col("month").cast("int")) \
+               .withColumn("minimum_minimum_nights", col("minimum_minimum_nights").cast("float")) \
+               .withColumn("maximum_minimum_nights", col("maximum_minimum_nights").cast("float")) \
+               .withColumn("minimum_maximum_nights", col("minimum_maximum_nights").cast("float")) \
+               .withColumn("maximum_maximum_nights", col("maximum_maximum_nights").cast("float")) \
+               .withColumn("minimum_nights_avg_ntm", col("minimum_nights_avg_ntm").cast("float")) \
+               .withColumn("maximum_nights_avg_ntm", col("maximum_nights_avg_ntm").cast("float")) \
+               .withColumn("calculated_host_listings_count_entire_homes", col("calculated_host_listings_count").cast("float"))
+--------------------------------------------------------------------------------
+
+----Dealing with 'price','security_deposit','extra_people' column:
+
+#To remove the dollar sign from the columns containing $:
+
+from pyspark.sql.functions import col, regexp_replace
+
+new_df = new_df.withColumn("price", regexp_replace(col("price"), "\\$", ""))
+new_df = new_df.withColumn("security_deposit", regexp_replace(col("security_deposit"), "\\$", ""))
+new_df = new_df.withColumn("extra_people", regexp_replace(col("extra_people"), "\\$", ""))
+
+
+new_df = new_df.withColumn("price", col("price").cast("float"))
+new_df = new_df.withColumn("security_deposit", col("security_deposit").cast("float"))
+new_df = new_df.withColumn("extra_people", col("extra_people").cast("float"))
+
+new_df.printSchema()
+
+------------------------------------------------------------------------------------ Dealing with "security_deposite" column
+#replacing null values with 0:
+
+from pyspark.sql.functions import col
+>>new_df = new_df.fillna({"security_deposit": 0})
+
+>>> null_count = new_df.filter(col("security_deposit").isNull()).count()
+>>> print("Number of null values in security_deposit column:", null_count)
+
+--------------------------------------------------------------------------------
+----Dealing with "host_response_time" column:
+# Replacing empty strings and null values with 'within a few hours'
+
+
+from pyspark.sql.functions import col, when
+
+new_df = new_df.withColumn('host_response_time', when((col('host_response_time') == '') | (col('host_response_time').isNull()), 'within a few hours').otherwise(col('host_response_time')))
+
+
+null_count = new_df.filter(col("security_deposit").isNull()).count()
+print("Number of null values in security_deposit column:", null_count)
+-----------------------------------------------------------------------------------
+
+----Dealing with instant_bookable column:
+
+from pyspark.sql.functions import col, when
+
+
+new_df = new_df.withColumn('instant_bookable', when(col('instant_bookable') == 't', 'yes')
+                           .when(col('instant_bookable') == 'f', 'no')
+                           .when(col('instant_bookable').isNull() | (col('instant_bookable') == ''), 'yes')
+                           .otherwise(col('instant_bookable')))
+
+
+----------------------------------------------------------
+----Dealing with minimum_minimum_nights column:
+
+from pyspark.sql import functions as F
+
+absolute_mean_rounded = int(round(new_df.select(F.mean('minimum_minimum_nights')).collect()[0][0]))
+
+
+new_df = new_df.fillna({'minimum_minimum_nights': absolute_mean_rounded})
+
+null_count = new_df.filter(col("minimum_minimum_nightst").isNull()).count()
+print("Number of null values in security_deposit column:", null_count)
+-------------------------------------------------------------------
+
+#############################################################################################################################
+
+df   -my
+new_df  -my 41 columns
+df_rds---->pankaj file ,command 
+df_rds_new---->after selecting selected 36 columns, so we have to add 5 columns in pankaj
+
+i.e.only 
+1)security_deposit
+2)guests_included
+3)extra_people
+4)cancellation_policy
+5)month
+6)city
+
+------------------------------------------------------
+1)security_deposite:
+#values_set = [1,2,3]
+#df_with_random = df.withColumn("new_column", lit(values_set).getItem((rand()*len(values_set)).cast("int")))
+--------------
+
+
+values_set = [0,900,333,100,161,200,678,567,500,200,108,372,417,1000,800,713]
+
+rds_df = rds_df.withColumn("security_deposit", lit(values_set).getItem((rand()*len(values_set)).cast("int")))
+
+rds_df.select("security_deposit").show(20)
+
+
+
+
+--------------------------------------------------------
+#values_set = [1,2,3]
+#df_with_random = df.withColumn("new_column", lit(values_set).getItem((rand()*len(values_set)).cast("int")))
+
+2)guests_included:
+
+from pyspark.sql.functions import lit
+from pyspark.sql.functions import rand
+values_set = [1,2,3]
+rds_df = rds_df.withColumn("guests_included", lit(values_set).getItem((rand()*len(values_set)).cast("int")))
+# Show the DataFrame with the new column
+rds_df.select("guests_included").show()
+-----------------------------------------------------------
+
+3)extra_people column:
+
+values_set = [1,2,3]
+rds_df = rds_df.withColumn("extra_people", lit(values_set).getItem((rand()*len(values_set)).cast("int")))
+df_with_random.select("extra_people").show()
+
+
+-----------------------------------------------------------
+4)cancellation_policy--> drop this col from original data and flexible ,within_15_days,10%_of_cancellation_charges
+
+values_set = ["flexible" ,"within_15_days","10%_of_cancellation_charges"]
+rds_df = rds_df.withColumn("cancellation_policy", lit(values_set).getItem((rand()*len(values_set)).cast("int")).cast("string"))
+rds_df.select("cancellation_policy").show()
+
+------------------------------------------------
+5)month column:
+values_set = ["jan","feb","mar","apr","may","june","july","aug","sep","oct","nov","dec"]
+rds_df = rds_df.withColumn("month", lit(values_set).getItem((rand()*len(values_set)).cast("int")).cast("string"))
+rds_df.select("month").show()
+
+--------------------------------------------------
+6)# 35 columns:columns for latestdata:,"city"**:
+
+values_set = ["Rio de Janeiro"]
+
+rds_df = rds_df.withColumn("city", lit(values_set).cast("string"))
+
+rds_df.select("city").show()
+
+
+ ------------------------------------------------------
+# columns for latestdata-35
+
+selected_columns = [
+    "id", "name", "description", 
+    "host_name", "host_response_time","host_listings_count", "host_verifications", 
+    "host_identity_verified", "neighbourhood","latitude", "longitude", 
+    "property_type", "room_type", "accommodates", "bathrooms", "bedrooms", "beds", "amenities", 
+    "price", 
+    "availability_30", "availability_60", "availability_90", "availability_365","number_of_reviews", 
+    "review_scores_rating", "review_scores_accuracy", "review_scores_cleanliness", 
+    "review_scores_checkin", "review_scores_communication", "review_scores_location", 
+    "review_scores_value", "instant_bookable", 
+    "minimum_minimum_nights","maximum_maximum_nights","calculated_host_listings_count"
+]
+
+
+
+ 
+
+
