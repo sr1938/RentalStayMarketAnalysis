@@ -1,0 +1,49 @@
+name: Terraform AWS Deployment
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  Terraform-action:
+    name: Terraform
+    runs-on: ubuntu-latest
+    defaults:
+       run:
+         shell: bash
+         working-directory: .
+
+    steps:
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.7.3
+        # cli_config_credentials_token: ${{ secrets.TF_API_TOKEN}}
+
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+      
+    - name: Configure AWS credentials from AWS account
+      run: |
+            aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            aws configure set aws_default_region ${{ secrets.AWS_DEFAULT_REGION }}
+            aws configure set aws_session_token ${{ secrets.AWS_SESSION_TOKEN }}
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION}}
+        AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+    
+    - name: Initialize Terraform
+      working-directory: deploy
+      run: terraform init
+      
+    - name: Plan Infrastructure Changes
+      working-directory: deploy
+      run: terraform plan -no-color
+      
+    - name: Apply Infrastructure Changes
+      working-directory: deploy
+      run: terraform apply -auto-approve
