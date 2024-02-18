@@ -1,0 +1,391 @@
+import sys
+from awsglue.transforms import *
+from awsglue.utils import getResolvedOptions
+from pyspark.context import SparkContext
+from awsglue.context import GlueContext
+from awsglue.dynamicframe import DynamicFrame
+import pyspark
+from awsglue.job import Job
+from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+from awsglue.transforms import ApplyMapping, DropNullFields
+from pyspark.sql.functions import lit, rand, col, regexp_replace, when, round
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, FloatType, DoubleType, LongType
+from pyspark.sql.functions import col, mean, round, lit, when
+
+
+## @params: [JOB_NAME]
+args = getResolvedOptions(sys.argv, ['JOB_NAME'])
+
+sc = SparkContext()
+glueContext = GlueContext(sc)
+spark = glueContext.spark_session
+job = Job(glueContext)
+job.init(args['JOB_NAME'], args)
+
+rds_input_path = "s3://group4-raw-data-zone/job1/rdsdata.parquet/"
+s3_input_path = "s3://shubh-datalak-raw/total_data.csv"
+
+df_rds = spark.read.parquet(rds_input_path)
+
+df_s3 = spark.read.format('csv').options(sep=",", escape='"', mode="PERMISSIVE", header=True, multiLine=True).load(s3_input_path)
+
+
+values_set = F.array([0,900,333,100,161,200,678,567,500,200,108,372,417,1000,800,713])
+
+rds_df = df_rds.withColumn("security_deposit", lit(values_set).getItem((rand()*len(values_set)).cast("int")).cast("string"))
+
+values_set = F.array([1,2,3])
+
+rds_df = rds_df.withColumn("guests_included", lit(values_set).getItem((rand()*len(values_set)).cast("int")).cast("string"))
+
+values_set = F.array([1,2,3])
+
+rds_df = rds_df.withColumn("extra_people", lit(values_set).getItem((rand()*len(values_set)).cast("int")).cast("string"))
+
+
+values_set = ["flexible" ,"within_15_days","10%_of_cancellation_charges"]
+
+rds_df = rds_df.withColumn("cancellation_policy", lit(values_set).getItem((rand()*len(values_set)).cast("int")).cast("string"))
+
+
+values_set = ["january","february","march","april","may","june","july","august","september","october","november","december"]
+
+rds_df = rds_df.withColumn("month", lit(values_set).getItem((rand()*len(values_set)).cast("int")).cast("string"))
+
+
+values_set = ["Rio de Janeiro", "Rio de Janeiro"]
+
+rds_df = rds_df.withColumn("city", lit(values_set).getItem((rand() * len(values_set)).cast("int")).cast("string"))
+
+
+selected_columns1 = [
+"id", "name", "host_name", "host_response_time", "host_listings_count", "host_verifications",
+"host_identity_verified", "neighbourhood", "city", "latitude", "longitude", "property_type",
+"room_type", "accommodates", "bathrooms", "bedrooms", "beds", "amenities", "price",
+"security_deposit", "guests_included", "extra_people", "availability_30", "availability_60",
+"availability_90", "availability_365", "number_of_reviews", "review_scores_rating",
+"instant_bookable", "month", "minimum_minimum_nights", "maximum_maximum_nights",
+"calculated_host_listings_count"
+]
+
+# Selecting columns
+new_s3_df = df.select(selected_columns1)
+
+new_rds_df = rds_df.select(selected_columns1)
+
+
+
+# Union dataframes
+new_df = new_s3_df.union(new_rds_df)
+
+df8=new_df.dropDuplicates()
+new_df=df8
+
+
+columns_to_replace = ["price", "security_deposit", "extra_people"]
+for col_name in columns_to_replace:
+    new_df = new_df.withColumn(col_name, regexp_replace(col(col_name), "\\$", ""))
+
+new_df = new_df.dropna(subset=["name"])
+
+
+new_df = new_df.dropna(subset=["host_name"])
+
+
+
+#4)host_response_time:
+
+mode_time = new_df.groupBy("host_response_time").count().orderBy(col("count").desc()).limit(1).select("host_response_time").collect()[0][0]
+#mode_time= "within an hour"
+
+new_df = new_df.fillna({"host_response_time": "within an hour"})
+
+
+
+
+
+
+
+
+#5) host_listings_count:
+
+new_df = new_df.withColumn("host_listings_count", round(col("host_listings_count")).cast("int"))
+
+
+
+
+
+#8)neighbourhood:
+
+# Replace null values in the neighbourhood column with "Unknown"
+
+new_df = new_df.withColumn("neighbourhood", when(new_df["neighbourhood"].isNull(), "Unknown").otherwise(new_df["neighbourhood"]))
+
+
+
+#9)city:
+
+
+default_value = "Unknown"
+new_df = new_df.withColumn("city", when(new_df["city"].isNull(), default_value).otherwise(new_df["city"]))
+
+
+
+
+
+
+#15)bathrooms:
+
+
+# replace null value using mean value
+
+mean_bathrooms = new_df.select(mean(col('bathrooms'))).collect()[0][0]
+
+
+rounded_mean_bathrooms = 1.0
+
+new_df = new_df.withColumn('bathrooms', when(col('bathrooms').isNull(), rounded_mean_bathrooms).otherwise(col('bathrooms')))
+
+new_df.filter(col('bathrooms').isNull()).count()
+
+
+new_df = new_df.withColumn("bathrooms", round(col("bathrooms")).cast("int"))
+
+
+
+
+
+#16)bedrooms:
+
+
+# replace null value using mean value
+
+
+mean_bedrooms = new_df.select(mean(col('bedrooms'))).collect()[0][0]
+
+rounded_mean_bedrooms = 1.0
+
+new_df = new_df.withColumn('bedrooms', when(col('bedrooms').isNull(), rounded_mean_bedrooms).otherwise(col('bedrooms')))
+
+
+new_df = new_df.withColumn("bedrooms", round(col("bedrooms")).cast("int"))
+
+
+
+
+
+#17)beds:
+
+
+
+# replace null value using mean value
+
+
+
+mean_beds = new_df.select(mean(col('beds'))).collect()[0][0]
+
+
+rounded_mean_beds = 3.0
+
+new_df = new_df.withColumn('beds', when(col('beds').isNull(), rounded_mean_beds).otherwise(col('beds')))
+
+# make it integer
+
+
+new_df = new_df.withColumn("beds", round(col("beds")).cast("int"))
+
+
+
+
+
+#19)price column:
+
+mean_price = new_df.filter(col("price") != 0).select(mean(col("price"))).first()[0]
+mean_price=int(mean_price)
+
+new_df = new_df.withColumn("price", when((col("price").isNull()) | (col("price") == 0), mean_price).otherwise(col("price")))
+
+
+
+#20) security_deposit:
+
+
+#replacing NA values with zero
+new_df = new_df.fillna({"security_deposit": 0})
+
+
+
+#22)extra_people: zero null
+
+
+
+# Replace null values in the column 'extra_people' with 0
+
+new_df = new_df.withColumn("extra_people", when(new_df["extra_people"].isNull(), 0.0).otherwise(new_df["extra_people"]))
+
+
+
+
+#28)review_scores_rating:
+
+new_df = new_df.withColumn("review_scores_rating",
+when(col("review_scores_rating").isNull(), None)
+.otherwise(floor((col("review_scores_rating") - 10) / 9).cast(IntegerType())))
+
+absolute_mean = new_df.filter(col("review_scores_rating").isNotNull()).select(mean(col("review_scores_rating"))).collect()[0][0]
+print(absolute_mean)
+
+
+rounded_abs_mean = 7
+
+new_df = new_df.withColumn("review_scores_rating", when(col("review_scores_rating").isNull(), rounded_abs_mean).otherwise(col("review_scores_rating")))
+
+
+
+
+
+#29)"instant_bookable":
+
+
+
+
+new_df = new_df.withColumn('instant_bookable', when(col('instant_bookable') == 't', 'yes')
+.when(col('instant_bookable') == 'f', 'no')
+.when(col('instant_bookable').isNull() | (col('instant_bookable') == ''), 'yes')
+.otherwise(col('instant_bookable')))
+
+
+
+
+#30)month:
+
+
+
+new_df = new_df.withColumn("month",
+when(col("month") == 1, "january")
+.when(col("month") == 2, "february")
+.when(col("month") == 3, "march")
+.when(col("month") == 4, "april")
+.when(col("month") == 5, "may")
+.when(col("month") == 6, "june")
+.when(col("month") == 7, "july")
+.when(col("month") == 8, "august")
+.when(col("month") == 9, "september")
+.when(col("month") == 10, "october")
+.when(col("month") == 11, "november")
+.when(col("month") == 12, "december")
+.otherwise(col("month")))
+
+
+
+
+
+
+#38)"minimum_minimum_nights":
+
+
+mean_value = new_df.select(mean(col("minimum_minimum_nights"))).collect()[0][0]
+
+mean_value= 5.0
+
+
+new_df = new_df.withColumn("minimum_minimum_nights", when(col("minimum_minimum_nights").isNull(), mean_value).otherwise(col("minimum_minimum_nights")))
+
+
+# make it integer
+
+
+new_df = new_df.withColumn("minimum_minimum_nights", round(col("minimum_minimum_nights")).cast("int"))
+
+
+
+
+#39)"maximum_maximum_nights":
+
+
+
+
+#mean_value = new_df.filter(col("maximum_maximum_nights") != 999999999.0).select(mean(col("maximum_maximum_nights"))).collect()[0][0]
+
+mean_value=1104
+
+new_df = new_df.withColumn("maximum_maximum_nights", when((col("maximum_maximum_nights") == 999999999.0) | (col("maximum_maximum_nights").isNull()), mean_value).otherwise(col("maximum_maximum_nights")))
+
+
+
+
+# make it integer
+
+
+new_df = new_df.withColumn("maximum_maximum_nights", round(col("maximum_maximum_nights")).cast("int"))
+
+
+
+
+
+
+# give new schema to df
+
+new_schema = StructType([
+StructField("id", LongType()),
+StructField("name", StringType()),
+StructField("host_name", StringType()),
+StructField("host_response_time", StringType()),
+StructField("host_listings_count", IntegerType()),
+StructField("host_verifications", StringType()),
+StructField("host_identity_verified", StringType()),
+StructField("neighbourhood", StringType()),
+StructField("city", StringType()),
+StructField("latitude", DoubleType()),
+StructField("longitude", DoubleType()),
+StructField("property_type", StringType()),
+StructField("room_type", StringType()),
+StructField("accommodates", IntegerType()),
+StructField("bathrooms", IntegerType()),
+StructField("bedrooms", IntegerType()),
+StructField("beds", IntegerType()),
+StructField("amenities", StringType()),
+StructField("price", FloatType()),
+StructField("security_deposit", FloatType()),
+StructField("guests_included", IntegerType()),
+StructField("extra_people", FloatType()),
+StructField("availability_30", IntegerType()),
+StructField("availability_60", IntegerType()),
+StructField("availability_90", IntegerType()),
+StructField("availability_365", StringType()),
+StructField("number_of_reviews", StringType()),
+StructField("review_scores_rating", IntegerType()),
+StructField("instant_bookable", StringType()),
+StructField("month", StringType()),
+StructField("minimum_minimum_nights", IntegerType()),
+StructField("maximum_maximum_nights", IntegerType()),
+StructField("calculated_host_listings_count", IntegerType()),
+StructField("cancellation_policy", StringType())
+])
+
+
+
+for field in new_schema:
+        new_df = new_df.withColumn(field.name, df[field.name].cast(field.dataType))
+
+
+
+
+# to write in s3 bucket cleaned data in parquet format
+
+output_path = "s3://group4-enrich-data-zone/job2/"
+
+new_df.coalesce(1).write \
+.option("header", "True") \
+.option("multiline", True) \
+.parquet(output_path)
+
+
+
+# in csv format
+
+new_df.coalesce(1).write.mode("overwrite").option("header", "True").option("multiline", True).csv(output_path)
+
+
+job.commit()

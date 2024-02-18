@@ -12,10 +12,11 @@ resource "aws_s3_object" "upload-glue-script-2" {
 }
 
 
-resource "aws_glue_job" "glue_job_1" {
+#-------------------------  GLUE JOB -----------------------------#
+resource "aws_glue_job" "ingestion" {
   glue_version = "4.0" 
   max_retries = 0 
-  name = "Ingestion_job" 
+  name = "Ingestion_job-${random_id.random_id_generator.hex}" 
   description = "Ingesting data from s3" 
   role_arn = "arn:aws:iam::199657276973:role/LabRole"
   
@@ -23,74 +24,53 @@ resource "aws_glue_job" "glue_job_1" {
   worker_type = "G.1X" 
   timeout = "60" 
   
-  tags = {
-    project = "final_project" 
-  }
   command {
-    name="gluel" 
+    name="glueetl" 
     script_location = "s3://${aws_s3_bucket.scripts.id}/first_job.py" 
+    python_version = "3"
   }
-  default_arguments = {
-    "--output-dir"              = "s3://group4-enrich-data-zone/"
-    "--class"                   = "GlueApp"
-    "--enable-job-insights"     = "true"
-    "--enable-auto-scaling"     = "false"
-    "--enable-glue-datacatalog" = "true"
-    "--job-language"            = "python"
-    "--job-bookmark-option"     = "job-bookmark-disable"
-    "--datalake-formats"        = "iceberg"
-    "--conf"                    = "spark.sql.extensions=org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions  --conf spark.sql.catalog.glue_catalog=org.apache.iceberg.spark.SparkCatalog  --conf spark.sql.catalog.glue_catalog.warehouse=s3://tnt-erp-sql/ --conf spark.sql.catalog.glue_catalog.catalog-impl=org.apache.iceberg.aws.glue.GlueCatalog  --conf spark.sql.catalog.glue_catalog.io-impl=org.apache.iceberg.aws.s3.S3FileIO"
-  }
+
 }
 
-
-resource "aws_glue_job" "glue_job_2" {
-  glue_version = "4.0" 
+resource "aws_glue_job" "cleaning" {
+  glue_version = "4.0"
   max_retries = 0 
-  name = "Cleaning_job" 
+  name = "Cleaning_job-${random_id.random_id_generator.hex}" 
   description = "Cleaning and preprocessing" 
   role_arn = "arn:aws:iam::199657276973:role/LabRole"
   
   number_of_workers = 2 
   worker_type = "G.1X" 
   timeout = "60" 
-  
-  tags = {
-    project = "final_project" 
-  }
+ 
   command {
-    name="glue2" 
+    name="glueet1" 
     script_location = "s3://${aws_s3_bucket.scripts.id}/second_job.py" 
+    python_version = "3"
   }
   default_arguments = {
-    "--output-dir"              = "s3://group4-enrich-data-zone/"
-    "--class"                   = "GlueApp"
-    "--enable-job-insights"     = "true"
-    "--enable-auto-scaling"     = "false"
-    "--enable-glue-datacatalog" = "true"
-    "--job-language"            = "python"
-    "--job-bookmark-option"     = "job-bookmark-disable"
-    "--datalake-formats"        = "iceberg"
-    "--conf"                    = "spark.sql.extensions=org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions  --conf spark.sql.catalog.glue_catalog=org.apache.iceberg.spark.SparkCatalog  --conf spark.sql.catalog.glue_catalog.warehouse=s3://tnt-erp-sql/ --conf spark.sql.catalog.glue_catalog.catalog-impl=org.apache.iceberg.aws.glue.GlueCatalog  --conf spark.sql.catalog.glue_catalog.io-impl=org.apache.iceberg.aws.s3.S3FileIO"
+    "--job-language" = "python"
+    
   }
+  
 }
 
 
 #---------- STEP FUNCTION TO TRIGGER GLUE JOB AND NOTIFY---------------#
 resource "aws_sfn_state_machine" "glue_job_trigger" {
-  name     = "glue-job-trigger"
+  name     = "glue-job-trigger-${random_id.random_id_generator.hex}"
   role_arn = "arn:aws:iam::199657276973:role/LabRole"
 
   definition = <<EOF
 {
-  "Comment": "Firstly, Combining Data and Secondly Cleaning and modifying the data",
+  "Comment": "ingesting data from rds to s3",
   "StartAt": "GlueJob1",
   "States": {
     "GlueJob1": {
       "Type": "Task",
       "Resource": "arn:aws:states:::glue:startJobRun.sync",
       "Parameters": {
-        "JobName": "${aws_glue_job.glue_job_1.name}"
+        "JobName": "${aws_glue_job.ingestion.name}"
       },
       "Next": "SNSPublish1"
     },
@@ -107,7 +87,7 @@ resource "aws_sfn_state_machine" "glue_job_trigger" {
       "Type": "Task",
       "Resource": "arn:aws:states:::glue:startJobRun.sync",
       "Parameters": {
-        "JobName": "${aws_glue_job.glue_job_2.name}"
+        "JobName": "${aws_glue_job.cleaning.name}"
       },
       "Next": "SNSPublish2"
     },

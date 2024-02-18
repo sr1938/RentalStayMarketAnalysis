@@ -2,22 +2,21 @@
 provider "aws" {
     region = "us-east-1"
   }
+# generate randomised names
+resource "random_id" "random_id_generator" {
+    byte_length = 8
+}
 
-# # generate randomised names
-# resource "random_id" "random_id_generator" {
-#     byte_length = 8
-# }
-
-#------------------- STEP FUNCTION TO TRIGGER GLUE JOB ---------------#
-#  Define an SNS topic :
+#------------------- STEP FUNCTION TO TRIGGER GLUE JOB ------------------------#
+#  Define an SNS topic : 
 
 resource "aws_sns_topic" "glue_job_notification" {
-  name = "glue-job-notification-topic"
+  name = "glue-job-notification-topic-${random_id.random_id_generator.hex}"
 }
 
 ####--------------------------------------- S3 bucket --------------------------------------------####
 resource "aws_s3_bucket" "scripts" {
-    bucket = "glue-scripts"
+    bucket = "deployingscripts-${random_id.random_id_generator.hex}"
     
     tags = {
         project_type = "demo"
@@ -51,37 +50,37 @@ resource "aws_s3_bucket_acl" "scripts" {
 
 ####--------------------------------------- EC2 Instance --------------------------------------------####
 
-resource "aws_instance" "ec2ingest"{
-  ami            = "ami-0cf10cdf9fcd62d37" 
-  instance_type  = "t2.micro"
-  key_name       = "shubhamkey"
-  vpc_security_group_ids = [aws_security_group.main.id]
+# resource "aws_instance" "ec2ingest"{
+#   ami            = "ami-0cf10cdf9fcd62d37" 
+#   instance_type  = "t2.micro"
+#   key_name       = "shubhamkey"
+#   vpc_security_group_ids = [aws_security_group.main.id]
 
-  root_block_device {
-        volume_size = 30  # Set the root volume size to 30 GB
-  }
-   tags = {
-    Name = "Kaggle-EC2"
-  }
-}
+#   root_block_device {
+#         volume_size = 30  # Set the root volume size to 30 GB
+#   }
+#    tags = {
+#     Name = "Kaggle-EC2"
+#   }
+# }
 
-resource "aws_security_group" "main" {
+# resource "aws_security_group" "main" {
   
-  ingress {
-    from_port   = 22
-    protocol    = "TCP"
-    to_port     = 22
-    cidr_blocks = ["0.0.0.0/0"]
+#   ingress {
+#     from_port   = 22
+#     protocol    = "TCP"
+#     to_port     = 22
+#     cidr_blocks = ["0.0.0.0/0"]
 
-  }
+#   }
 
-  egress {
-    from_port  = 0
-    protocol   = "-1"
-    to_port    = 0
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
+#   egress {
+#     from_port  = 0
+#     protocol   = "-1"
+#     to_port    = 0
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
+# }
 
 # ####--------------------------------------- EMR --------------------------------------------####
 
@@ -116,17 +115,17 @@ resource "aws_security_group" "main" {
 
 # ####--------------------------------------- RDS --------------------------------------------####
 
-resource "aws_db_instance" "rds_ingest_instance" {
-  engine                   = "mysql"
-  db_name                  = "group4"
-  username                 = "admin"
-  password                 = "123456789"
-  skip_final_snapshot      = true
-  delete_automated_backups = true
-  multi_az                 = false
-  publicly_accessible      = true
-  instance_class           = "db.t3.micro"
-  allocated_storage        = 20
-  availability_zone        = "us-east-1c"
+# resource "aws_db_instance" "rds_ingest_instance" {
+#   engine                   = "mysql"
+#   db_name                  = "group4"
+#   username                 = "admin"
+#   password                 = "123456789"
+#   skip_final_snapshot      = true
+#   delete_automated_backups = true
+#   multi_az                 = false
+#   publicly_accessible      = true
+#   instance_class           = "db.t3.micro"
+#   allocated_storage        = 20
+#   availability_zone        = "us-east-1c"
   
-}
+# }
