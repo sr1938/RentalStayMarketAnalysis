@@ -23,43 +23,12 @@ spark = glueContext.spark_session
 job = Job(glueContext)
 job.init(args['JOB_NAME'], args)
 
-rds_input_path = "s3://group4-raw-data-zone/job1/rdsdata.parquet/"
-s3_input_path = "s3://shubh-datalak-raw/total_data.csv"
+df_rds_new = spark.read.parquet('s3://final-029/rdsdata/rdsdata.parquet/part-00000-39d6cd9d-9326-4fb5-b597-dca63cd9388a-c000.snappy.parquet')
 
-df_rds = spark.read.parquet(rds_input_path)
-
-df_s3 = spark.read.format('csv').options(sep=",", escape='"', mode="PERMISSIVE", header=True, multiLine=True).load(s3_input_path)
+df = spark.read.format('csv').options(sep=",", escape='"', mode="PERMISSIVE", header=True, multiLine=True).load('s3://final-044/zip/total_data.csv')
 
 
-values_set = F.array([0,900,333,100,161,200,678,567,500,200,108,372,417,1000,800,713])
-
-rds_df = df_rds.withColumn("security_deposit", lit(values_set).getItem((rand()*len(values_set)).cast("int")).cast("string"))
-
-values_set = F.array([1,2,3])
-
-rds_df = rds_df.withColumn("guests_included", lit(values_set).getItem((rand()*len(values_set)).cast("int")).cast("string"))
-
-values_set = F.array([1,2,3])
-
-rds_df = rds_df.withColumn("extra_people", lit(values_set).getItem((rand()*len(values_set)).cast("int")).cast("string"))
-
-
-values_set = ["flexible" ,"within_15_days","10%_of_cancellation_charges"]
-
-rds_df = rds_df.withColumn("cancellation_policy", lit(values_set).getItem((rand()*len(values_set)).cast("int")).cast("string"))
-
-
-values_set = ["january","february","march","april","may","june","july","august","september","october","november","december"]
-
-rds_df = rds_df.withColumn("month", lit(values_set).getItem((rand()*len(values_set)).cast("int")).cast("string"))
-
-
-values_set = ["Rio de Janeiro", "Rio de Janeiro"]
-
-rds_df = rds_df.withColumn("city", lit(values_set).getItem((rand() * len(values_set)).cast("int")).cast("string"))
-
-
-selected_columns1 = [
+selected_columns = [
 "id", "name", "host_name", "host_response_time", "host_listings_count", "host_verifications",
 "host_identity_verified", "neighbourhood", "city", "latitude", "longitude", "property_type",
 "room_type", "accommodates", "bathrooms", "bedrooms", "beds", "amenities", "price",
@@ -70,14 +39,12 @@ selected_columns1 = [
 ]
 
 # Selecting columns
-new_s3_df = df.select(selected_columns1)
-
-new_rds_df = rds_df.select(selected_columns1)
-
+df = df.select(selected_columns)
+df1_rds_new = df_rds_new.select(selected_columns)
 
 
 # Union dataframes
-new_df = new_s3_df.union(new_rds_df)
+new_df = df.union(df1_rds_new)
 
 df8=new_df.dropDuplicates()
 new_df=df8
@@ -87,14 +54,15 @@ columns_to_replace = ["price", "security_deposit", "extra_people"]
 for col_name in columns_to_replace:
     new_df = new_df.withColumn(col_name, regexp_replace(col(col_name), "\\$", ""))
 
+
 new_df = new_df.dropna(subset=["name"])
 
 
 new_df = new_df.dropna(subset=["host_name"])
 
 
-
 #4)host_response_time:
+
 
 mode_time = new_df.groupBy("host_response_time").count().orderBy(col("count").desc()).limit(1).select("host_response_time").collect()[0][0]
 #mode_time= "within an hour"
@@ -109,6 +77,8 @@ new_df = new_df.fillna({"host_response_time": "within an hour"})
 
 
 #5) host_listings_count:
+
+
 
 new_df = new_df.withColumn("host_listings_count", round(col("host_listings_count")).cast("int"))
 
@@ -139,6 +109,8 @@ new_df = new_df.withColumn("city", when(new_df["city"].isNull(), default_value).
 
 
 # replace null value using mean value
+
+from pyspark.sql.functions import col, mean, round,lit
 
 mean_bathrooms = new_df.select(mean(col('bathrooms'))).collect()[0][0]
 
@@ -181,7 +153,7 @@ new_df = new_df.withColumn("bedrooms", round(col("bedrooms")).cast("int"))
 
 # replace null value using mean value
 
-
+from pyspark.sql.functions import col, mean, round,lit
 
 mean_beds = new_df.select(mean(col('beds'))).collect()[0][0]
 
@@ -201,6 +173,7 @@ new_df = new_df.withColumn("beds", round(col("beds")).cast("int"))
 
 #19)price column:
 
+from pyspark.sql.functions import col, mean, when
 mean_price = new_df.filter(col("price") != 0).select(mean(col("price"))).first()[0]
 mean_price=int(mean_price)
 
@@ -219,6 +192,7 @@ new_df = new_df.fillna({"security_deposit": 0})
 #22)extra_people: zero null
 
 
+from pyspark.sql.functions import when
 
 # Replace null values in the column 'extra_people' with 0
 
@@ -374,18 +348,16 @@ for field in new_schema:
 
 # to write in s3 bucket cleaned data in parquet format
 
-output_path = "s3://group4-enrich-data-zone/job2/"
 
 new_df.coalesce(1).write \
 .option("header", "True") \
 .option("multiline", True) \
-.parquet(output_path)
+.parquet("s3://final-044/sample/glue/")
 
 
 
 # in csv format
 
-new_df.coalesce(1).write.mode("overwrite").option("header", "True").option("multiline", True).csv(output_path)
-
+new_df.coalesce(1).write.mode("overwrite").option("header", "True").option("multiline", True).csv("s3://final-044/sample/glue/")
 
 job.commit()
