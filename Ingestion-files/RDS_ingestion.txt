@@ -14,9 +14,9 @@ pyspark --jars $mysql_connector_path
 
 from pyspark.sql import SparkSession
 
-jdbc_url = "jdbc:mysql://group4.c5enejajetyi.us-east-1.rds.amazonaws.com:3306/group4"
+jdbc_url = "jdbc:mysql://database-1.cbx6lq4lpptb.us-east-1.rds.amazonaws.com:3306/rdsdata"
 
-jdbc_pro = {"user":"admin","password":"123456789","driver":"com.mysql.jdbc.Driver"}
+jdbc_pro = {"user":"admin","password":"12345678","driver":"com.mysql.jdbc.Driver"}
 
 
 --------------------------------------------------------
@@ -32,20 +32,18 @@ df2 = spark.read.jdbc(url=jdbc_url,table="rds",properties=jdbc_pro)
 df2.coalesce(1).write \
     .option("header", "True") \
     .option("multiline", True) \
-    .parquet("s3://group4-raw-data-zone/rdsdata.parquet")
+    .parquet("s3://airbnbraw/rdsdata1/rdsdata.parquet")
 
-d=df2.select("price").distinct()
-d.show()
+#d=df2.select("price").distinct()
+#d.show()
 
 
 -------------------------------------------------------------
 
 # To read data from s3 datalake
 
-rds2 = spark.read.parquet('s3://group4-raw-data-zone/rdsdata.parquet/part-00000-39d6cd9d-9326-4fb5-b597-dca63cd9388a-c000.snappy.parquet')
+df_rds_new = spark.read.parquet('s3://airbnbraw/rdsdata1/rdsdata.parquet/part-00000-48a44d9f-a4af-484a-906b-3f9380b2b8a6-c000.snappy.parquet')
 
 
 
 
-d=rds2.select("amenities").distinct()
-d.show()
