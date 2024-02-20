@@ -11,7 +11,13 @@ resource "random_id" "random_id_generator" {
 #  Define an SNS topic : 
 
 resource "aws_sns_topic" "glue_job_notification" {
-  name = "glue-job-notification-topic-${random_id.random_id_generator.hex}"
+  name = "glue_job_notification_topic"
+}
+
+resource "aws_sns_topic_subscription" "email_subscription" {
+  topic_arn = aws_sns_topic.glue_job_notification.arn
+  protocol  = "email"
+  endpoint  = "shubhamr1938@gmail.com"
 }
 
 ####--------------------------------------- S3 bucket --------------------------------------------####
