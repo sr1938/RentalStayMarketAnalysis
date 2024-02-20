@@ -93,7 +93,7 @@ resource "aws_sfn_state_machine" "glue_job_trigger" {
     },
     "WaitForGlueJob2Completion": {
       "Type": "Wait",
-      "Seconds": 300,  // Adjust this time based on the expected duration of Glue Job 2
+      "Seconds": 300,  
       "Next": "RunCrawler"
     },
     "RunCrawler": {
