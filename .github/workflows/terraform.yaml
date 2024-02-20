@@ -52,19 +52,10 @@ jobs:
         id: apply
         working-directory: deploy
         run: |
-          terraform apply -auto-approve 
-          echo "::set-output name=status::${{ steps.apply.outputs.status }}"  
-
-      - name: Monitor Terraform Apply Status
-        id: monitor
-        run: |
-          while [[ "$(echo "${{ steps.apply.outputs.status }}")" != "success" ]]; do
-            sleep 10
-            echo "Waiting for Terraform apply to complete..."
-          done
+          terraform apply -auto-approve   
 
       - name: Start Step Function Execution
-        if: ${{ steps.monitor.outputs.status == 'success' }}
+        if: ${{ steps.outputs.status == 'success' }}
         run: |
           aws stepfunctions start-execution --state-machine-arn "arn:aws:states:us-east-1:199657276973:stateMachine:group4stepfunction"
         env:
