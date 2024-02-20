@@ -54,8 +54,11 @@ jobs:
         run: |
           terraform apply -auto-approve   
 
+      - name: Wait for 10 seconds
+        run: sleep 10
+
       - name: Start Step Function Execution
-        if: ${{ steps.outputs.status == 'success' }}
+        if: ${{ steps.apply.outputs.status == 'success' }}
         run: |
           aws stepfunctions start-execution --state-machine-arn "arn:aws:states:us-east-1:199657276973:stateMachine:group4stepfunction"
         env:
@@ -63,3 +66,4 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
           AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+
