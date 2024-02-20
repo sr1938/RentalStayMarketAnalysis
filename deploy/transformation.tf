@@ -89,14 +89,27 @@ resource "aws_sfn_state_machine" "glue_job_trigger" {
       "Parameters": {
         "JobName": "${aws_glue_job.cleaning.name}"
       },
-      "Next": "SNSPublish2"
+      "Next": "WaitForGlueJob2Completion"
     },
-    "SNSPublish2": {
+    "WaitForGlueJob2Completion": {
+      "Type": "Wait",
+      "Seconds": 300,  // Adjust this time based on the expected duration of Glue Job 2
+      "Next": "RunCrawler"
+    },
+    "RunCrawler": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startCrawler.sync",
+      "Parameters": {
+        "Name": "${aws_glue_crawler.rental_market_analysis.name}"
+      },
+      "Next": "SNSPublish3"
+    },
+    "SNSPublish3": {
       "Type": "Task",
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
         "TopicArn": "${aws_sns_topic.glue_job_notification.arn}",
-        "Message": "Greetings Group 4,\n\nYour Glue Job 2 is completed successfully\n\nThe Data is cleaned and loaded to enriched zone Successfully."
+        "Message": "Greetings Group 4,\n\nYour Glue Crawler is completed successfully."
       },
       "End": true
     }
@@ -104,5 +117,3 @@ resource "aws_sfn_state_machine" "glue_job_trigger" {
 }
 EOF
 }
-
-
