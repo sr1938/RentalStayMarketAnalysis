@@ -11,7 +11,12 @@ from pyspark.sql import functions as F
 from awsglue.transforms import ApplyMapping, DropNullFields
 from pyspark.sql.functions import lit, rand, col, regexp_replace, when, round
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, FloatType, DoubleType, LongType
-from pyspark.sql.functions import col, mean, round, lit, when
+from pyspark.sql.functions import col, mean, round, lit, when, floor
+from awsglue.transforms import ApplyMapping, DropNullFields
+from pyspark.sql.functions import lit, rand, col, regexp_replace, when, round, floor, mean
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, FloatType, DoubleType, LongType
+
+
 
 
 ## @params: [JOB_NAME]
@@ -200,7 +205,7 @@ when(col("review_scores_rating").isNull(), None)
 .otherwise(floor((col("review_scores_rating") - 10) / 9).cast(IntegerType())))
 
 #absolute_mean = new_df.filter(col("review_scores_rating").isNotNull()).select(mean(col("review_scores_rating"))).collect()[0][0]
-print(absolute_mean)
+# print(absolute_mean)
 
 
 rounded_abs_mean = 7
