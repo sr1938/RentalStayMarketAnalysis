@@ -52,8 +52,8 @@ jobs:
         id: apply
         working-directory: deploy
         run: |
-          terraform apply -auto-approve | tee /dev/tty
-          echo "::set-output name=status::success"  # Assuming success if the apply command completes without error
+          terraform apply -auto-approve 
+          echo "::set-output name=status::${{ steps.apply.outputs.status }}"  
 
       - name: Monitor Terraform Apply Status
         id: monitor
