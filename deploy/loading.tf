@@ -10,6 +10,7 @@ resource "aws_glue_classifier" "csv_classifier" {
   name          = "CustomCSVClassifier"
   
   csv_classifier {
+    
     allow_single_column    = false
     contains_header        = "UNKNOWN"  # Automatic detection of headers
     delimiter              = ","
