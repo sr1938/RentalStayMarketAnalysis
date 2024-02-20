@@ -84,20 +84,29 @@ resource "aws_sfn_state_machine" "glue_job_trigger" {
       "Parameters": {
         "JobName": "${aws_glue_job.cleaning.name}"
       },
+      "Next": "SNSPublish2"
+    },
+    "SNSPublish2": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "${aws_sns_topic.glue_job_notification.arn}",
+        "Message": "Greetings Group 4,\n\nYour Glue Job 2 is completed successfully."
+      },
       "Next": "WaitForGlueJob2Completion"
     },
     "WaitForGlueJob2Completion": {
       "Type": "Wait",
-      "Seconds": 300,  
-      "Next": "RunCrawler"
+      "Seconds": 60,
+      "Next": "StartCrawler"
     },
-    "RunCrawler": {
+    "StartCrawler": {
       "Type": "Task",
-      "Resource": "arn:aws:states:us-east-1:glue:startCrawler.sync",
+      "Next": "SNSPublish3",
       "Parameters": {
         "Name": "${aws_glue_crawler.rental_market_analysis.name}"
       },
-      "Next": "SNSPublish3"
+      "Resource": "arn:aws:states:::aws-sdk:glue:startCrawler"
     },
     "SNSPublish3": {
       "Type": "Task",
