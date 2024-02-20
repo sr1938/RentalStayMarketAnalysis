@@ -52,10 +52,18 @@ jobs:
         id: apply
         working-directory: deploy
         run: |
-          terraform apply -auto-approve   
+          terraform apply -auto-approve
+          echo "::set-output name=status::success"
 
-      - name: Wait for 10 seconds
-        run: sleep 10
+      - name: Wait for 5 seconds
+        if: ${{ always() }}
+        run: sleep 5
+
+      - name: Debug Output
+        if: ${{ always() }}
+        run: |
+          echo "Terraform Apply Status: ${{ steps.apply.outputs.status }}"
+          echo "Step Function execution condition: ${{ steps.apply.outputs.status == 'success' }}"
 
       - name: Start Step Function Execution
         if: ${{ steps.apply.outputs.status == 'success' }}
@@ -66,4 +74,3 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
           AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
-
