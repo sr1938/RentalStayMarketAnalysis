@@ -98,7 +98,7 @@ resource "aws_sfn_state_machine" "glue_job_trigger" {
     },
     "RunCrawler": {
       "Type": "Task",
-      "Resource": "arn:aws:states:::glue:startCrawler.sync",
+      "Resource": "arn:aws:states:us-east-1:glue:startCrawler.sync",
       "Parameters": {
         "Name": "${aws_glue_crawler.rental_market_analysis.name}"
       },
