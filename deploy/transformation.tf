@@ -47,12 +47,7 @@ resource "aws_glue_job" "cleaning" {
     name="glueet1" 
     script_location = "s3://${aws_s3_bucket.scripts.id}/second_job.py" 
     python_version = "3"
-  }
-  default_arguments = {
-    "--job-language" = "python"
-    
-  }
-  
+  }  
 }
 
 
