@@ -324,12 +324,6 @@ for field in new_schema:
 
 
 new_df.coalesce(1).write \
-.option("header", "True") \
-.option("multiline", True) \
-.parquet("s3://airbnbclean/cleandata/")
-
-
-new_df.coalesce(1).write \
     .option("header", "True") \
     .option("multiline", True) \
     .mode("overwrite") \
