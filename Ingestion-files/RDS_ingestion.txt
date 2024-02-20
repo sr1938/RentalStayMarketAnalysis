@@ -23,7 +23,7 @@ jdbc_pro = {"user":"admin","password":"12345678","driver":"com.mysql.jdbc.Driver
 # To read data from rds
 
 
-df2 = spark.read.jdbc(url=jdbc_url,table="rds",properties=jdbc_pro)
+df2 = spark.read.jdbc(url=jdbc_url,table="latestdata",properties=jdbc_pro)
 
 ------------------------------------------------------
 
@@ -32,7 +32,8 @@ df2 = spark.read.jdbc(url=jdbc_url,table="rds",properties=jdbc_pro)
 df2.coalesce(1).write \
     .option("header", "True") \
     .option("multiline", True) \
-    .parquet("s3://airbnbraw/rdsdata1/rdsdata.parquet")
+    .mode("overwrite") \
+    .parquet("s3://airbnbraw/rdsdata2/rdsdata2.parquet")
 
 #d=df2.select("price").distinct()
 #d.show()
@@ -42,7 +43,7 @@ df2.coalesce(1).write \
 
 # To read data from s3 datalake
 
-df_rds_new = spark.read.parquet('s3://airbnbraw/rdsdata1/rdsdata.parquet/part-00000-48a44d9f-a4af-484a-906b-3f9380b2b8a6-c000.snappy.parquet')
+df_rds_new = spark.read.parquet('s3://airbnbraw/rdsdata2/rdsdata2.parquet/part-00000-7209b082-404e-4dc4-bf42-a609b50cb674-c000.snappy.parquet')
 
 
 
