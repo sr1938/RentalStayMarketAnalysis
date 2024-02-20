@@ -6,44 +6,69 @@ on:
       - master
 
 jobs:
-  Terraform-action:
+  terraform-action:
     name: Terraform
     runs-on: ubuntu-latest
-    defaults:
-       run:
-         shell: bash
-         working-directory: .
-
-    steps:
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v1
-      with:
-        terraform_version: 1.7.3
-        # cli_config_credentials_token: ${{ secrets.TF_API_TOKEN}}
-
-    - name: Checkout Repository
-      uses: actions/checkout@v2
-      
-    - name: Configure AWS credentials from AWS account
-      run: |
-            aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-            aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            aws configure set aws_default_region ${{ secrets.AWS_DEFAULT_REGION }}
-            aws configure set aws_session_token ${{ secrets.AWS_SESSION_TOKEN }}
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION}}
-        AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
     
-    - name: Initialize Terraform
-      working-directory: deploy
-      run: terraform init
-      
-    - name: Plan Infrastructure Changes
-      working-directory: deploy
-      run: terraform plan -no-color
-      
-    - name: Apply Infrastructure Changes
-      working-directory: deploy
-      run: terraform apply -auto-approve
+    steps:
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.7.3
+
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials from AWS account
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set aws_default_region ${{ secrets.AWS_DEFAULT_REGION }}
+          aws configure set aws_session_token ${{ secrets.AWS_SESSION_TOKEN }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION}}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: Initialize Terraform
+        working-directory: deploy
+        run: terraform init
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Plan Infrastructure Changes
+        working-directory: deploy
+        run: terraform plan -no-color
+
+      - name: Apply Infrastructure Changes
+        id: apply
+        working-directory: deploy
+        run: |
+          terraform apply -auto-approve
+          echo "::set-output name=status::success"
+
+      - name: Monitor Terraform Apply Status
+        id: monitor
+        run: |
+          while [[ "$(echo "${{ steps.apply.outputs.status }}")" != "success" ]]; do
+            sleep 10
+            echo "Waiting for Terraform apply to complete..."
+          done
+
+      - name: Start Step Function Execution
+        if: ${{ steps.monitor.outputs.status == 'success' }}
+        run: |
+          aws stepfunctions start-execution --state-machine-arn "arn:aws:states:us-east-1:199657276973:stateMachine:group4stepfunction"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}

@@ -23,7 +23,7 @@ spark = glueContext.spark_session
 job = Job(glueContext)
 job.init(args['JOB_NAME'], args)
 
-df_rds_new = spark.read.parquet('s3://final-029/rdsdata/rdsdata.parquet/part-00000-39d6cd9d-9326-4fb5-b597-dca63cd9388a-c000.snappy.parquet')
+df_rds_new = spark.read.parquet('s3://group4-raw-data-zone/job1/')
 
 df = spark.read.format('csv').options(sep=",", escape='"', mode="PERMISSIVE", header=True, multiLine=True).load('s3://final-044/zip/total_data.csv')
 

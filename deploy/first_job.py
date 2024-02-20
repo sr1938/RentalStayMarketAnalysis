@@ -19,11 +19,11 @@ job.init(args['JOB_NAME'], args)
 
 
 
-jdbc_url = "jdbc:mysql://database-1.c5enejajetyi.us-east-1.rds.amazonaws.com:3306/group4"
+jdbc_url = "jdbc:mysql://database-1.cbx6lq4lpptb.us-east-1.rds.amazonaws.com:3306/rdsdata"
 
 jdbc_pro = {
     "user":"admin",
-    "password":"123456789",
+    "password":"12345678",
     "driver":"com.mysql.jdbc.Driver"
     }
 table_name = "rds"
@@ -36,7 +36,7 @@ rds_df = spark.read.jdbc(url=jdbc_url,table=table_name,properties=jdbc_pro)
 
 # To write data to s3 Datalake 
 
-output_path = "s3://final-029/rdsdata/rdsdata.parquet" 
+output_path = "s3://group4-raw-data-zone/job1/" 
 rds_df.coalesce(1).write \
     .option("header", "True") \
     .option("multiline", True) \
