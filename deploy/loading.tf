@@ -10,7 +10,7 @@ resource "aws_glue_classifier" "csv_classifier" {
   name          = "CustomCSVClassifier"
   
   csv_classifier {
-    
+
     allow_single_column    = false
     contains_header        = "UNKNOWN"  # Automatic detection of headers
     delimiter              = ","
@@ -33,12 +33,6 @@ resource "aws_glue_crawler" "rental_market_analysis" {
         product_type = "rental_market_analysis"
     }
     classifiers = [aws_glue_classifier.csv_classifier.name]
-
-    # Enable schema inference
-    schema_change_policy {
-    update_behavior = "UPDATE_IN_DATABASE"
-    delete_behavior = "DEPRECATE_IN_DATABASE"
-  }
 }
 
 ####-------------------------------- Athena ------------------------------------------####
