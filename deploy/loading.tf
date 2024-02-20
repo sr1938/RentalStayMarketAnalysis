@@ -15,6 +15,7 @@ resource "aws_glue_classifier" "csv_classifier" {
     delimiter              = ","
     disable_value_trimming = false
     quote_symbol           = "'"
+  
   }
 }
 
