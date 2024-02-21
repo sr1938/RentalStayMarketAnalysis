@@ -26,7 +26,7 @@ jdbc_pro = {
     "password":"12345678",
     "driver":"com.mysql.jdbc.Driver"
     }
-table_name = "rds"
+table_name = "latestdata"
 
 # To read data from rds
 

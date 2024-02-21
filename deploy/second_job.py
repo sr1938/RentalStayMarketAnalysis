@@ -11,7 +11,12 @@ from pyspark.sql import functions as F
 from awsglue.transforms import ApplyMapping, DropNullFields
 from pyspark.sql.functions import lit, rand, col, regexp_replace, when, round
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, FloatType, DoubleType, LongType
-from pyspark.sql.functions import col, mean, round, lit, when
+from pyspark.sql.functions import col, mean, round, lit, when, floor
+from awsglue.transforms import ApplyMapping, DropNullFields
+from pyspark.sql.functions import lit, rand, col, regexp_replace, when, round, floor, mean
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, FloatType, DoubleType, LongType
+
+
 
 
 ## @params: [JOB_NAME]
@@ -35,8 +40,9 @@ selected_columns = [
 "security_deposit", "guests_included", "extra_people", "availability_30", "availability_60",
 "availability_90", "availability_365", "number_of_reviews", "review_scores_rating",
 "instant_bookable", "month", "minimum_minimum_nights", "maximum_maximum_nights",
-"calculated_host_listings_count"
+"calculated_host_listings_count", "cancellation_policy"
 ]
+
 
 # Selecting columns
 df = df.select(selected_columns)
@@ -63,16 +69,10 @@ new_df = new_df.dropna(subset=["host_name"])
 
 #4)host_response_time:
 
-
-mode_time = new_df.groupBy("host_response_time").count().orderBy(col("count").desc()).limit(1).select("host_response_time").collect()[0][0]
-#mode_time= "within an hour"
+#mode_time = new_df.groupBy("host_response_time").count().orderBy(col("count").desc()).limit(1).select("host_response_time").collect()[0][0]
+mode_time= "within an hour"
 
 new_df = new_df.fillna({"host_response_time": "within an hour"})
-
-
-
-
-
 
 
 
@@ -103,8 +103,6 @@ new_df = new_df.withColumn("city", when(new_df["city"].isNull(), default_value).
 
 
 
-
-
 #15)bathrooms:
 
 
@@ -112,19 +110,17 @@ new_df = new_df.withColumn("city", when(new_df["city"].isNull(), default_value).
 
 from pyspark.sql.functions import col, mean, round,lit
 
-mean_bathrooms = new_df.select(mean(col('bathrooms'))).collect()[0][0]
-
+#mean_bathrooms = new_df.select(mean(col('bathrooms'))).collect()[0][0]
+#--> 1.6951  ====> 1.0
 
 rounded_mean_bathrooms = 1.0
 
 new_df = new_df.withColumn('bathrooms', when(col('bathrooms').isNull(), rounded_mean_bathrooms).otherwise(col('bathrooms')))
 
-new_df.filter(col('bathrooms').isNull()).count()
+#new_df.filter(col('bathrooms').isNull()).count()
 
 
 new_df = new_df.withColumn("bathrooms", round(col("bathrooms")).cast("int"))
-
-
 
 
 
@@ -134,8 +130,8 @@ new_df = new_df.withColumn("bathrooms", round(col("bathrooms")).cast("int"))
 # replace null value using mean value
 
 
-mean_bedrooms = new_df.select(mean(col('bedrooms'))).collect()[0][0]
-
+#mean_bedrooms = new_df.select(mean(col('bedrooms'))).collect()[0][0]
+#1.65
 rounded_mean_bedrooms = 1.0
 
 new_df = new_df.withColumn('bedrooms', when(col('bedrooms').isNull(), rounded_mean_bedrooms).otherwise(col('bedrooms')))
@@ -155,8 +151,8 @@ new_df = new_df.withColumn("bedrooms", round(col("bedrooms")).cast("int"))
 
 from pyspark.sql.functions import col, mean, round,lit
 
-mean_beds = new_df.select(mean(col('beds'))).collect()[0][0]
-
+#mean_beds = new_df.select(mean(col('beds'))).collect()[0][0]
+#---> 2.59516   =======>  3.0
 
 rounded_mean_beds = 3.0
 
@@ -175,6 +171,7 @@ new_df = new_df.withColumn("beds", round(col("beds")).cast("int"))
 
 from pyspark.sql.functions import col, mean, when
 mean_price = new_df.filter(col("price") != 0).select(mean(col("price"))).first()[0]
+
 mean_price=int(mean_price)
 
 new_df = new_df.withColumn("price", when((col("price").isNull()) | (col("price") == 0), mean_price).otherwise(col("price")))
@@ -207,8 +204,8 @@ new_df = new_df.withColumn("review_scores_rating",
 when(col("review_scores_rating").isNull(), None)
 .otherwise(floor((col("review_scores_rating") - 10) / 9).cast(IntegerType())))
 
-absolute_mean = new_df.filter(col("review_scores_rating").isNotNull()).select(mean(col("review_scores_rating"))).collect()[0][0]
-print(absolute_mean)
+#absolute_mean = new_df.filter(col("review_scores_rating").isNotNull()).select(mean(col("review_scores_rating"))).collect()[0][0]
+# print(absolute_mean)
 
 
 rounded_abs_mean = 7
@@ -254,12 +251,10 @@ when(col("month") == 1, "january")
 
 
 
-
-
 #38)"minimum_minimum_nights":
 
 
-mean_value = new_df.select(mean(col("minimum_minimum_nights"))).collect()[0][0]
+#mean_value = new_df.select(mean(col("minimum_minimum_nights"))).collect()[0][0]
 
 mean_value= 5.0
 
@@ -278,8 +273,6 @@ new_df = new_df.withColumn("minimum_minimum_nights", round(col("minimum_minimum_
 #39)"maximum_maximum_nights":
 
 
-
-
 #mean_value = new_df.filter(col("maximum_maximum_nights") != 999999999.0).select(mean(col("maximum_maximum_nights"))).collect()[0][0]
 
 mean_value=1104
@@ -287,14 +280,10 @@ mean_value=1104
 new_df = new_df.withColumn("maximum_maximum_nights", when((col("maximum_maximum_nights") == 999999999.0) | (col("maximum_maximum_nights").isNull()), mean_value).otherwise(col("maximum_maximum_nights")))
 
 
-
-
 # make it integer
 
 
 new_df = new_df.withColumn("maximum_maximum_nights", round(col("maximum_maximum_nights")).cast("int"))
-
-
 
 
 
@@ -327,8 +316,8 @@ StructField("extra_people", FloatType()),
 StructField("availability_30", IntegerType()),
 StructField("availability_60", IntegerType()),
 StructField("availability_90", IntegerType()),
-StructField("availability_365", StringType()),
-StructField("number_of_reviews", StringType()),
+StructField("availability_365", IntegerType()),
+StructField("number_of_reviews",IntegerType()),
 StructField("review_scores_rating", IntegerType()),
 StructField("instant_bookable", StringType()),
 StructField("month", StringType()),
@@ -341,23 +330,25 @@ StructField("cancellation_policy", StringType())
 
 
 for field in new_schema:
-        new_df = new_df.withColumn(field.name, df[field.name].cast(field.dataType))
-
+        new_df = new_df.withColumn(field.name, new_df[field.name].cast(field.dataType))
 
 
 
 # to write in s3 bucket cleaned data in parquet format
 
+output_path = "s3://group4-enrich-data-zone/job2/"
 
 new_df.coalesce(1).write \
 .option("header", "True") \
 .option("multiline", True) \
-.parquet("s3://final-044/sample/glue/")
+.parquet(output_path)
 
 
 
 # in csv format
 
-new_df.coalesce(1).write.mode("overwrite").option("header", "True").option("multiline", True).csv("s3://final-044/sample/glue/")
+
+
+# new_df.coalesce(1).write.mode("overwrite").option("header", "True").option("multiline", True).csv(output_path)
 
 job.commit()

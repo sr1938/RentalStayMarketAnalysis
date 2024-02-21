@@ -47,12 +47,7 @@ resource "aws_glue_job" "cleaning" {
     name="glueet1" 
     script_location = "s3://${aws_s3_bucket.scripts.id}/second_job.py" 
     python_version = "3"
-  }
-  default_arguments = {
-    "--job-language" = "python"
-    
-  }
-  
+  }  
 }
 
 
@@ -96,7 +91,29 @@ resource "aws_sfn_state_machine" "glue_job_trigger" {
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
         "TopicArn": "${aws_sns_topic.glue_job_notification.arn}",
-        "Message": "Greetings Group 4,\n\nYour Glue Job 2 is completed successfully\n\nThe Data is cleaned and loaded to enriched zone Successfully."
+        "Message": "Greetings Group 4,\n\nYour Glue Job 2 is completed successfully."
+      },
+      "Next": "WaitForGlueJob2Completion"
+    },
+    "WaitForGlueJob2Completion": {
+      "Type": "Wait",
+      "Seconds": 60,
+      "Next": "StartCrawler"
+    },
+    "StartCrawler": {
+      "Type": "Task",
+      "Next": "SNSPublish3",
+      "Parameters": {
+        "Name": "${aws_glue_crawler.rental_market_analysis.name}"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:glue:startCrawler"
+    },
+    "SNSPublish3": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn": "${aws_sns_topic.glue_job_notification.arn}",
+        "Message": "Greetings Group 4,\n\nYour Glue Crawler is completed successfully."
       },
       "End": true
     }
@@ -104,5 +121,3 @@ resource "aws_sfn_state_machine" "glue_job_trigger" {
 }
 EOF
 }
-
-
