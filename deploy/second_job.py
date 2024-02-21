@@ -77,8 +77,6 @@ new_df = new_df.withColumn("host_listings_count", round(col("host_listings_count
 
 
 
-
-
 #8)neighbourhood:
 
 # Replace null values in the neighbourhood column with "Unknown"
