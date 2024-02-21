@@ -10,14 +10,20 @@ resource "random_id" "random_id_generator" {
 #------------------- STEP FUNCTION TO TRIGGER GLUE JOB ------------------------#
 #  Define an SNS topic : 
 
-resource "aws_sns_topic" "glue_job_notification" {
-  name = "glue_job_notification_topic"
-}
+# resource "aws_sns_topic" "glue_job_notification" {
+#   name = "glue_job_notification_topic"
+# }
 
-resource "aws_sns_topic_subscription" "email_subscription" {
-  topic_arn = aws_sns_topic.glue_job_notification.arn
-  protocol  = "email"
-  endpoint  = "shubhamr1938@gmail.com"
+# resource "aws_sns_topic_subscription" "email_subscription" {
+#   topic_arn = aws_sns_topic.glue_job_notification.arn
+#   protocol  = "email"
+#   endpoint  = "shubhamr1938@gmail.com"
+# }
+
+variable "topic_arn" {
+  description = "topic arn for sns"
+  type        = string
+  default     = "arn:aws:sns:us-east-1:199657276973:glue_job_notification_topic"
 }
 
 ####--------------------------------------- S3 bucket --------------------------------------------####
