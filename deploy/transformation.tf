@@ -73,7 +73,7 @@ resource "aws_sfn_state_machine" "glue_job_trigger" {
       "Type": "Task",
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
-        "TopicArn": "${aws_sns_topic.glue_job_notification.arn}",
+        "TopicArn": "${var.topic_arn}",
         "Message": "Greetings Group 4,\n\nYour Glue Job 1 is completed successfully."
       },
       "Next": "GlueJob2"
@@ -90,7 +90,7 @@ resource "aws_sfn_state_machine" "glue_job_trigger" {
       "Type": "Task",
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
-        "TopicArn": "${aws_sns_topic.glue_job_notification.arn}",
+        "TopicArn": "${var.topic_arn}",
         "Message": "Greetings Group 4,\n\nYour Glue Job 2 is completed successfully."
       },
       "Next": "WaitForGlueJob2Completion"
@@ -112,7 +112,7 @@ resource "aws_sfn_state_machine" "glue_job_trigger" {
       "Type": "Task",
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
-        "TopicArn": "${aws_sns_topic.glue_job_notification.arn}",
+        "TopicArn": "${var.topic_arn}",
         "Message": "Greetings Group 4,\n\nYour Glue Crawler is completed successfully."
       },
       "End": true

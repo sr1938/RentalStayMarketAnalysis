@@ -8,15 +8,8 @@ import pyspark
 from awsglue.job import Job
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
-from awsglue.transforms import ApplyMapping, DropNullFields
-from pyspark.sql.functions import lit, rand, col, regexp_replace, when, round
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType, FloatType, DoubleType, LongType
-from pyspark.sql.functions import col, mean, round, lit, when, floor
-from awsglue.transforms import ApplyMapping, DropNullFields
 from pyspark.sql.functions import lit, rand, col, regexp_replace, when, round, floor, mean
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, FloatType, DoubleType, LongType
-
-
 
 
 ## @params: [JOB_NAME]
@@ -84,8 +77,6 @@ new_df = new_df.withColumn("host_listings_count", round(col("host_listings_count
 
 
 
-
-
 #8)neighbourhood:
 
 # Replace null values in the neighbourhood column with "Unknown"
@@ -108,7 +99,7 @@ new_df = new_df.withColumn("city", when(new_df["city"].isNull(), default_value).
 
 # replace null value using mean value
 
-from pyspark.sql.functions import col, mean, round,lit
+
 
 #mean_bathrooms = new_df.select(mean(col('bathrooms'))).collect()[0][0]
 #--> 1.6951  ====> 1.0
@@ -149,7 +140,6 @@ new_df = new_df.withColumn("bedrooms", round(col("bedrooms")).cast("int"))
 
 # replace null value using mean value
 
-from pyspark.sql.functions import col, mean, round,lit
 
 #mean_beds = new_df.select(mean(col('beds'))).collect()[0][0]
 #---> 2.59516   =======>  3.0
@@ -169,7 +159,6 @@ new_df = new_df.withColumn("beds", round(col("beds")).cast("int"))
 
 #19)price column:
 
-from pyspark.sql.functions import col, mean, when
 mean_price = new_df.filter(col("price") != 0).select(mean(col("price"))).first()[0]
 
 mean_price=int(mean_price)
@@ -189,7 +178,6 @@ new_df = new_df.fillna({"security_deposit": 0})
 #22)extra_people: zero null
 
 
-from pyspark.sql.functions import when
 
 # Replace null values in the column 'extra_people' with 0
 
