@@ -9,6 +9,7 @@
 resource "aws_glue_classifier" "csv_classifier" {
   name          = "CustomCSVClassifier-${random_id.random_id_generator.hex}"
   
+  
   csv_classifier {
 
     allow_single_column    = false
