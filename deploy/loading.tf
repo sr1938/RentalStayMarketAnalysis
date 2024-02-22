@@ -34,6 +34,7 @@ resource "aws_glue_crawler" "rental_market_analysis" {
         product_type = "rental_market_analysis"
     }
     classifiers = [aws_glue_classifier.csv_classifier.name]
+    
 }
 
 ####-------------------------------- Athena ------------------------------------------####
@@ -43,7 +44,6 @@ resource "aws_athena_workgroup" "rental_market_analysis_workgroup" {
 
 configuration {
     result_configuration {
-
         output_location = "s3://group4-enrich-data-zone/queryresults"
     }
   }
