@@ -48,49 +48,6 @@ new_df = df.union(df1_rds_new)
 df8=new_df.dropDuplicates()
 new_df=df8
 
-# give new schema to df
-
-new_schema = StructType([
-StructField("id", LongType()),
-StructField("name", StringType()),
-StructField("host_name", StringType()),
-StructField("host_response_time", StringType()),
-StructField("host_listings_count", IntegerType()),
-StructField("host_verifications", StringType()),
-StructField("host_identity_verified", StringType()),
-StructField("neighbourhood", StringType()),
-StructField("city", StringType()),
-StructField("latitude", DoubleType()),
-StructField("longitude", DoubleType()),
-StructField("property_type", StringType()),
-StructField("room_type", StringType()),
-StructField("accommodates", IntegerType()),
-StructField("bathrooms", IntegerType()),
-StructField("bedrooms", IntegerType()),
-StructField("beds", IntegerType()),
-StructField("amenities", StringType()),
-StructField("price", FloatType()),
-StructField("security_deposit", FloatType()),
-StructField("guests_included", IntegerType()),
-StructField("extra_people", FloatType()),
-StructField("availability_30", IntegerType()),
-StructField("availability_60", IntegerType()),
-StructField("availability_90", IntegerType()),
-StructField("availability_365", IntegerType()),
-StructField("number_of_reviews",IntegerType()),
-StructField("review_scores_rating", IntegerType()),
-StructField("instant_bookable", StringType()),
-StructField("month", StringType()),
-StructField("minimum_minimum_nights", IntegerType()),
-StructField("maximum_maximum_nights", IntegerType()),
-StructField("calculated_host_listings_count", IntegerType()),
-StructField("cancellation_policy", StringType())
-])
-
-
-for field in new_schema:
-        new_df = new_df.withColumn(field.name, new_df[field.name].cast(field.dataType))
-
 
 # replace $
 columns_to_replace = ["price", "security_deposit", "extra_people"]
@@ -190,7 +147,6 @@ new_df = new_df.withColumn("beds", round(col("beds")).cast("int"))
 #mean_price = new_df.filter(col("price") != 0).select(mean(col("price"))).first()[0]
 #mean_price=int(mean_price)
 mean_price =542
-new_df = new_df.withColumn("price", round(col("price")).cast("int"))
 new_df = new_df.withColumn("price", when((col("price").isNull()) | (col("price") == 0), mean_price).otherwise(col("price")))
 
 
@@ -203,7 +159,7 @@ new_df = new_df.na.fill({"security_deposit": 0})
 
 
 
-#22)extra_people: zero null
+#22)extra_people: 
 
 # Replace null values in the column 'extra_people' with 0
 new_df = new_df.fillna({"extra_people": 0.0})
@@ -290,6 +246,46 @@ new_df = new_df.withColumn("maximum_maximum_nights", when((col("maximum_maximum_
 # make it integer
 new_df = new_df.withColumn("maximum_maximum_nights", round(col("maximum_maximum_nights")).cast("int"))
 
+# give new schema to df
+
+new_schema = StructType([
+StructField("id", LongType()),
+StructField("name", StringType()),
+StructField("host_name", StringType()),
+StructField("host_response_time", StringType()),
+StructField("host_listings_count", IntegerType()),
+StructField("host_verifications", StringType()),
+StructField("host_identity_verified", StringType()),
+StructField("neighbourhood", StringType()),
+StructField("city", StringType()),
+StructField("latitude", DoubleType()),
+StructField("longitude", DoubleType()),
+StructField("property_type", StringType()),
+StructField("room_type", StringType()),
+StructField("accommodates", IntegerType()),
+StructField("bathrooms", IntegerType()),
+StructField("bedrooms", IntegerType()),
+StructField("beds", IntegerType()),
+StructField("amenities", StringType()),
+StructField("guests_included", IntegerType()),
+StructField("availability_30", IntegerType()),
+StructField("availability_60", IntegerType()),
+StructField("availability_90", IntegerType()),
+StructField("availability_365", IntegerType()),
+StructField("number_of_reviews",IntegerType()),
+StructField("review_scores_rating", IntegerType()),
+StructField("instant_bookable", StringType()),
+StructField("month", StringType()),
+StructField("minimum_minimum_nights", IntegerType()),
+StructField("maximum_maximum_nights", IntegerType()),
+StructField("calculated_host_listings_count", IntegerType()),
+StructField("cancellation_policy", StringType())
+])
+
+
+for field in new_schema:
+        new_df = new_df.withColumn(field.name, new_df[field.name].cast(field.dataType))
+
 
 
 
@@ -302,12 +298,5 @@ new_df.coalesce(1).write \
 .option("multiline", True) \
 .parquet(output_path)
 
-
-
-# in csv format
-
-
-
-# new_df.coalesce(1).write.mode("overwrite").option("header", "True").option("multiline", True).csv(output_path)
 
 job.commit()
