@@ -42,7 +42,6 @@ resource "aws_athena_workgroup" "rental_market_analysis_workgroup" {
 
 configuration {
     result_configuration {
-
         output_location = "s3://group4-enrich-data-zone/queryresults"
     }
   }
