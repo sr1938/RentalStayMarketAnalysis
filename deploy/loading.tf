@@ -33,6 +33,7 @@ resource "aws_glue_crawler" "rental_market_analysis" {
         product_type = "rental_market_analysis"
     }
     classifiers = [aws_glue_classifier.csv_classifier.name]
+    
 }
 
 ####-------------------------------- Athena ------------------------------------------####
