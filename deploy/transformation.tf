@@ -44,7 +44,7 @@ resource "aws_glue_job" "cleaning" {
   timeout = "60" 
  
   command {
-    name="glueet1" 
+    name="glueetl" 
     script_location = "s3://${aws_s3_bucket.scripts.id}/second_job.py" 
     python_version = "3"
   }  

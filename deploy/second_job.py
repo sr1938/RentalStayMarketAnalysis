@@ -295,7 +295,7 @@ new_df = new_df.withColumn("maximum_maximum_nights", round(col("maximum_maximum_
 
 # to write in s3 bucket cleaned data in parquet format
 
-output_path = "s3://group4-enrich-data-zone/job2/"
+output_path = "s3://group4-enrich-data-zone/job2/rio-airbnb/"
 
 new_df.coalesce(1).write \
 .option("header", "True") \
