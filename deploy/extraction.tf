@@ -26,6 +26,7 @@ variable "topic_arn" {
   default     = "arn:aws:sns:us-east-1:199657276973:glue_job_notification_topic"
 }
 
+
 ####--------------------------------------- S3 bucket --------------------------------------------####
 resource "aws_s3_bucket" "scripts" {
     bucket = "deployingscripts-${random_id.random_id_generator.hex}"
