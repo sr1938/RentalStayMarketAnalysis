@@ -56,6 +56,7 @@ resource "aws_sfn_state_machine" "glue_job_trigger" {
   name     = "group4stepfunction"
   role_arn = "arn:aws:iam::199657276973:role/LabRole"
 
+
   definition = <<EOF
 {
   "Comment": "ingesting data from rds to s3",
