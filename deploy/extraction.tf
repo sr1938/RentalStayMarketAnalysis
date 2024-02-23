@@ -5,6 +5,7 @@ provider "aws" {
 # generate randomised names
 resource "random_id" "random_id_generator" {
     byte_length = 8
+
 }
 
 
