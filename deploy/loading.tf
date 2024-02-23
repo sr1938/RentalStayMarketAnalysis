@@ -1,11 +1,6 @@
 
 # # ####------------------------GLUE DATA-CATALOG & CRAWLER-------------------------------------------####
 
-# defining database
-# resource "aws_glue_catalog_database" "RentalMarket" {
-#     name = "rental_market_database"
-# }
-
 resource "aws_glue_classifier" "csv_classifier" {
   name          = "CustomCSVClassifier-${random_id.random_id_generator.hex}"
   

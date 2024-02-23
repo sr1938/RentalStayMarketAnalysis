@@ -7,18 +7,6 @@ resource "random_id" "random_id_generator" {
     byte_length = 8
 }
 
-#------------------- STEP FUNCTION TO TRIGGER GLUE JOB ------------------------#
-#  Define an SNS topic : 
-
-# resource "aws_sns_topic" "glue_job_notification" {
-#   name = "glue_job_notification_topic"
-# }
-
-# resource "aws_sns_topic_subscription" "email_subscription" {
-#   topic_arn = aws_sns_topic.glue_job_notification.arn
-#   protocol  = "email"
-#   endpoint  = "shubhamr1938@gmail.com"
-# }
 
 variable "topic_arn" {
   description = "topic arn for sns"
