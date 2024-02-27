@@ -12,6 +12,7 @@ from pyspark.sql.functions import lit, rand, col, regexp_replace, when, round, f
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, FloatType, DoubleType, LongType
 
 
+
 ## @params: [JOB_NAME]
 args = getResolvedOptions(sys.argv, ['JOB_NAME'])
 
