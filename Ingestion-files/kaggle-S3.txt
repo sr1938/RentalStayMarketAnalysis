@@ -2,19 +2,15 @@
 Kaggle -> S3
 ######################
 
+sudo yum install python3
+
+sudo yum install python3-pip
+
 pip3 install kaggle
 
 mkdir ~/.kaggle
 
-aws configure set aws_access_key_id <AWS_ACCESS_KEY_ID>
-
-aws configure set aws_secret_access_key <AWS_SECRET_ACCESS_KEY>
-
-aws configure set default_region us-east-1
-
-aws configure set output json
-
-aws --no-sign-request s3 cp s3://shubh-datalak-raw/kaggle.json ~/.kaggle
+mv kaggle.json /home/ec2-user/.kaggle/
 
 export PATH=$PATH:~/.local/bin
 
@@ -28,4 +24,9 @@ kaggle datasets download -d allanbruno/airbnb-rio-de-janeiro
 
 unzip airbnb-rio-de-janeiro.zip
 
-aws s3 cp /home/ec2-user/total_data.csv s3://shubh-datalak-raw/
+aws configure set aws_access_key_id ASIAS47EAIYW4UO5H7G6
+aws configure set aws_secret_access_key /PgBYsVzQUYlhdeWHVD8rh/KPM0x568Q1Xt0Flzo
+aws configure set default_region us-east-1
+aws configure set output json
+
+aws s3 cp /home/ec2-user/total_data.csv s3://group4-raw-data-zone/
