@@ -22,6 +22,7 @@ job.init(args['JOB_NAME'], args)
 
 jdbc_url = "jdbc:mysql://database-2.cayrvib30xep.us-east-1.rds.amazonaws.com/rdsdata"
 
+
 jdbc_pro = {
     "user":"admin",
     "password":"12345678",
